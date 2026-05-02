@@ -9,18 +9,18 @@ number:
 date:
 consensus: true
 v: 3
-area: SEC
-workgroup: oauth
+area: "Security"
+workgroup: "Web Authorization Protocol"
 keyword:
  - Transaction
  - Authorization
  - Human-in-the-loop
 venue:
-  group: oauth
-  type: Working Group
-  mail: oauth@ietf.org
-  arch: https://mailarchive.ietf.org/arch/browse/oauth/
-  github: yaroslavros/oauth-txn-challenge
+  group: "Web Authorization Protocol"
+  type: "Working Group"
+  mail: "oauth@ietf.org"
+  arch: "https://mailarchive.ietf.org/arch/browse/oauth/"
+  github: "yaroslavros/oauth-txn-challenge"
   latest: "https://yaroslavros.github.io/oauth-txn-challenge/draft-yrosomakho-oauth-txn-challenge.html"
 
 author:
