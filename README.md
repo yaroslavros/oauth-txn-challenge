@@ -4,10 +4,10 @@
 
 This is the working area for the individual Internet-Draft, "OAuth Transaction Authorization Challenge".
 
-* [Editor's Copy](https://yaroslavros.github.io/oauth-txn-challenge/#go.draft-yrosomakho-oauth-txn-challenge.html)
-* [Datatracker Page](https://datatracker.ietf.org/doc/draft-yrosomakho-oauth-txn-challenge)
-* [Individual Draft](https://datatracker.ietf.org/doc/html/draft-yrosomakho-oauth-txn-challenge)
-* [Compare Editor's Copy to Individual Draft](https://yaroslavros.github.io/oauth-txn-challenge/#go.draft-yrosomakho-oauth-txn-challenge.diff)
+* [Editor's Copy](https://yaroslavros.github.io/oauth-txn-challenge/#go.draft-rosomakho-oauth-txn-challenge.html)
+* [Datatracker Page](https://datatracker.ietf.org/doc/draft-rosomakho-oauth-txn-challenge)
+* [Individual Draft](https://datatracker.ietf.org/doc/html/draft-rosomakho-oauth-txn-challenge)
+* [Compare Editor's Copy to Individual Draft](https://yaroslavros.github.io/oauth-txn-challenge/#go.draft-rosomakho-oauth-txn-challenge.diff)
 
 
 ## Contributing
