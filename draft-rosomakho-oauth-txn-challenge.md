@@ -3,7 +3,7 @@ title: "OAuth Transaction Authorization Challenge"
 abbrev: "Txn Challenge"
 category: std
 
-docname: draft-yrosomakho-oauth-txn-challenge-latest
+docname: draft-rosomakho-oauth-txn-challenge-latest
 submissiontype: IETF  # also: "independent", "editorial", "IAB", or "IRTF"
 number:
 date:
@@ -21,7 +21,7 @@ venue:
   mail: "oauth@ietf.org"
   arch: "https://mailarchive.ietf.org/arch/browse/oauth/"
   github: "yaroslavros/oauth-txn-challenge"
-  latest: "https://yaroslavros.github.io/oauth-txn-challenge/draft-yrosomakho-oauth-txn-challenge.html"
+  latest: "https://yaroslavros.github.io/oauth-txn-challenge/draft-rosomakho-oauth-txn-challenge.html"
 
 author:
  -
