@@ -7,7 +7,14 @@
 <title>OAuth Transaction Authorization Challenge</title>
 <meta content="Yaroslav Rosomakho" name="author">
 <meta content="
-       TODO Abstract 
+       This document defines an OAuth mechanism for transaction-specific authorization challenges.
+A protected resource can require additional authorization for a particular operation by
+returning a transaction authorization challenge. This is useful when requests are mediated by
+agents, automated workflows, or delegated services and the protected resource requires
+confirmation from a human user, resource owner, or organizational authority.  The client
+presents the challenge to an authorization server, which validates the challenge, obtains
+any required approval, and issues a transaction token.  The transaction token is then
+presented to the protected resource as evidence that the challenged operation was authorized. 
     " name="description">
 <meta content="xml2rfc 3.33.0" name="generator">
 <meta content="Transaction" name="keyword">
@@ -1082,7 +1089,14 @@ svg :is([fill="white"], [fill^="#fff"]) {
 <h1 id="title">OAuth Transaction Authorization Challenge</h1>
 <section id="section-abstract">
       <h2 id="abstract"><a href="#abstract" class="selfRef">Abstract</a></h2>
-<p id="section-abstract-1">TODO Abstract<a href="#section-abstract-1" class="pilcrow">¶</a></p>
+<p id="section-abstract-1">This document defines an OAuth mechanism for transaction-specific authorization challenges.
+A protected resource can require additional authorization for a particular operation by
+returning a transaction authorization challenge. This is useful when requests are mediated by
+agents, automated workflows, or delegated services and the protected resource requires
+confirmation from a human user, resource owner, or organizational authority.  The client
+presents the challenge to an authorization server, which validates the challenge, obtains
+any required approval, and issues a transaction token.  The transaction token is then
+presented to the protected resource as evidence that the challenged operation was authorized.<a href="#section-abstract-1" class="pilcrow">¶</a></p>
 </section>
 <section class="note rfcEditorRemove" id="section-note.1">
       <h2 id="name-about-this-document">
@@ -1149,25 +1163,106 @@ svg :is([fill="white"], [fill^="#fff"]) {
         </h2>
 <nav class="toc"><ul class="compact toc ulBare ulEmpty">
 <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.1">
-            <p id="section-toc.1-1.1.1" class="keepWithNext"><a href="#section-1" class="auto internal xref">1</a>.  <a href="#name-introduction" class="internal xref">Introduction</a></p>
+            <p id="section-toc.1-1.1.1"><a href="#section-1" class="auto internal xref">1</a>.  <a href="#name-introduction" class="internal xref">Introduction</a></p>
+<ul class="compact toc ulBare ulEmpty">
+<li class="compact toc ulBare ulEmpty" id="section-toc.1-1.1.2.1">
+                <p id="section-toc.1-1.1.2.1.1" class="keepWithNext"><a href="#section-1.1" class="auto internal xref">1.1</a>.  <a href="#name-human-approval-for-agent-me" class="internal xref">Human Approval for Agent-Mediated Actions</a></p>
+</li>
+              <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.1.2.2">
+                <p id="section-toc.1-1.1.2.2.1" class="keepWithNext"><a href="#section-1.2" class="auto internal xref">1.2</a>.  <a href="#name-authorization-by-a-differen" class="internal xref">Authorization by a Different Resource Owner</a></p>
+</li>
+              <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.1.2.3">
+                <p id="section-toc.1-1.1.2.3.1" class="keepWithNext"><a href="#section-1.3" class="auto internal xref">1.3</a>.  <a href="#name-organizational-approval" class="internal xref">Organizational Approval</a></p>
+</li>
+            </ul>
 </li>
           <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.2">
-            <p id="section-toc.1-1.2.1" class="keepWithNext"><a href="#section-2" class="auto internal xref">2</a>.  <a href="#name-conventions-and-definitions" class="internal xref">Conventions and Definitions</a></p>
+            <p id="section-toc.1-1.2.1"><a href="#section-2" class="auto internal xref">2</a>.  <a href="#name-conventions-and-definitions" class="internal xref">Conventions and Definitions</a></p>
 </li>
           <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.3">
-            <p id="section-toc.1-1.3.1" class="keepWithNext"><a href="#section-3" class="auto internal xref">3</a>.  <a href="#name-security-considerations" class="internal xref">Security Considerations</a></p>
+            <p id="section-toc.1-1.3.1"><a href="#section-3" class="auto internal xref">3</a>.  <a href="#name-architecture" class="internal xref">Architecture</a></p>
 </li>
           <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.4">
-            <p id="section-toc.1-1.4.1"><a href="#section-4" class="auto internal xref">4</a>.  <a href="#name-iana-considerations" class="internal xref">IANA Considerations</a></p>
+            <p id="section-toc.1-1.4.1"><a href="#section-4" class="auto internal xref">4</a>.  <a href="#name-transaction-authorization-c" class="internal xref">Transaction Authorization Challenge</a></p>
+<ul class="compact toc ulBare ulEmpty">
+<li class="compact toc ulBare ulEmpty" id="section-toc.1-1.4.2.1">
+                <p id="section-toc.1-1.4.2.1.1"><a href="#section-4.1" class="auto internal xref">4.1</a>.  <a href="#name-challenge-capability-signal" class="internal xref">Challenge Capability Signal</a></p>
+</li>
+              <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.4.2.2">
+                <p id="section-toc.1-1.4.2.2.1"><a href="#section-4.2" class="auto internal xref">4.2</a>.  <a href="#name-challenge-response" class="internal xref">Challenge Response</a></p>
+<ul class="compact toc ulBare ulEmpty">
+<li class="compact toc ulBare ulEmpty" id="section-toc.1-1.4.2.2.2.1">
+                    <p id="section-toc.1-1.4.2.2.2.1.1"><a href="#section-4.2.1" class="auto internal xref">4.2.1</a>.  <a href="#name-challenge-representation" class="internal xref">Challenge Representation</a></p>
+</li>
+                  <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.4.2.2.2.2">
+                    <p id="section-toc.1-1.4.2.2.2.2.1"><a href="#section-4.2.2" class="auto internal xref">4.2.2</a>.  <a href="#name-challenge-claims" class="internal xref">Challenge Claims</a></p>
+</li>
+                </ul>
+</li>
+              <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.4.2.3">
+                <p id="section-toc.1-1.4.2.3.1"><a href="#section-4.3" class="auto internal xref">4.3</a>.  <a href="#name-challenge-signing-and-key-d" class="internal xref">Challenge Signing and Key Discovery</a></p>
+</li>
+              <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.4.2.4">
+                <p id="section-toc.1-1.4.2.4.1"><a href="#section-4.4" class="auto internal xref">4.4</a>.  <a href="#name-client-processing" class="internal xref">Client Processing</a></p>
+</li>
+              <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.4.2.5">
+                <p id="section-toc.1-1.4.2.5.1"><a href="#section-4.5" class="auto internal xref">4.5</a>.  <a href="#name-authorization-server-proces" class="internal xref">Authorization Server Processing</a></p>
+</li>
+            </ul>
 </li>
           <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.5">
-            <p id="section-toc.1-1.5.1"><a href="#section-5" class="auto internal xref">5</a>.  <a href="#name-normative-references" class="internal xref">Normative References</a></p>
+            <p id="section-toc.1-1.5.1"><a href="#section-5" class="auto internal xref">5</a>.  <a href="#name-transaction-token" class="internal xref">Transaction Token</a></p>
+<ul class="compact toc ulBare ulEmpty">
+<li class="compact toc ulBare ulEmpty" id="section-toc.1-1.5.2.1">
+                <p id="section-toc.1-1.5.2.1.1"><a href="#section-5.1" class="auto internal xref">5.1</a>.  <a href="#name-token-issuance" class="internal xref">Token Issuance</a></p>
+</li>
+              <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.5.2.2">
+                <p id="section-toc.1-1.5.2.2.1"><a href="#section-5.2" class="auto internal xref">5.2</a>.  <a href="#name-token-presentation" class="internal xref">Token Presentation</a></p>
+</li>
+              <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.5.2.3">
+                <p id="section-toc.1-1.5.2.3.1"><a href="#section-5.3" class="auto internal xref">5.3</a>.  <a href="#name-protected-resource-validati" class="internal xref">Protected Resource Validation</a></p>
+</li>
+            </ul>
 </li>
           <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.6">
-            <p id="section-toc.1-1.6.1"><a href="#appendix-A" class="auto internal xref"></a><a href="#name-acknowledgments" class="internal xref">Acknowledgments</a></p>
+            <p id="section-toc.1-1.6.1"><a href="#section-6" class="auto internal xref">6</a>.  <a href="#name-security-considerations" class="internal xref">Security Considerations</a></p>
 </li>
           <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.7">
-            <p id="section-toc.1-1.7.1"><a href="#appendix-B" class="auto internal xref"></a><a href="#name-authors-address" class="internal xref">Author's Address</a></p>
+            <p id="section-toc.1-1.7.1"><a href="#section-7" class="auto internal xref">7</a>.  <a href="#name-iana-considerations" class="internal xref">IANA Considerations</a></p>
+<ul class="compact toc ulBare ulEmpty">
+<li class="compact toc ulBare ulEmpty" id="section-toc.1-1.7.2.1">
+                <p id="section-toc.1-1.7.2.1.1"><a href="#section-7.1" class="auto internal xref">7.1</a>.  <a href="#name-http-field-name-registratio" class="internal xref">HTTP Field Name Registration</a></p>
+</li>
+              <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.7.2.2">
+                <p id="section-toc.1-1.7.2.2.1"><a href="#section-7.2" class="auto internal xref">7.2</a>.  <a href="#name-oauth-extensions-error-regi" class="internal xref">OAuth Extensions Error Registration</a></p>
+</li>
+              <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.7.2.3">
+                <p id="section-toc.1-1.7.2.3.1"><a href="#section-7.3" class="auto internal xref">7.3</a>.  <a href="#name-oauth-parameter-registratio" class="internal xref">OAuth Parameter Registration</a></p>
+</li>
+              <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.7.2.4">
+                <p id="section-toc.1-1.7.2.4.1"><a href="#section-7.4" class="auto internal xref">7.4</a>.  <a href="#name-oauth-protected-resource-me" class="internal xref">OAuth Protected Resource Metadata Registration</a></p>
+</li>
+              <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.7.2.5">
+                <p id="section-toc.1-1.7.2.5.1"><a href="#section-7.5" class="auto internal xref">7.5</a>.  <a href="#name-json-web-token-claims-regis" class="internal xref">JSON Web Token Claims Registration</a></p>
+</li>
+            </ul>
+</li>
+          <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.8">
+            <p id="section-toc.1-1.8.1"><a href="#section-8" class="auto internal xref">8</a>.  <a href="#name-references" class="internal xref">References</a></p>
+<ul class="compact toc ulBare ulEmpty">
+<li class="compact toc ulBare ulEmpty" id="section-toc.1-1.8.2.1">
+                <p id="section-toc.1-1.8.2.1.1"><a href="#section-8.1" class="auto internal xref">8.1</a>.  <a href="#name-normative-references" class="internal xref">Normative References</a></p>
+</li>
+              <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.8.2.2">
+                <p id="section-toc.1-1.8.2.2.1"><a href="#section-8.2" class="auto internal xref">8.2</a>.  <a href="#name-informative-references" class="internal xref">Informative References</a></p>
+</li>
+            </ul>
+</li>
+          <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.9">
+            <p id="section-toc.1-1.9.1"><a href="#appendix-A" class="auto internal xref"></a><a href="#name-acknowledgments" class="internal xref">Acknowledgments</a></p>
+</li>
+          <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.10">
+            <p id="section-toc.1-1.10.1"><a href="#appendix-B" class="auto internal xref"></a><a href="#name-authors-address" class="internal xref">Author's Address</a></p>
 </li>
         </ul>
 </nav>
@@ -1178,7 +1273,73 @@ svg :is([fill="white"], [fill^="#fff"]) {
       <h2 id="name-introduction">
 <a href="#section-1" class="section-number selfRef">1. </a><a href="#name-introduction" class="section-name selfRef">Introduction</a>
       </h2>
-<p id="section-1-1">TODO Introduction<a href="#section-1-1" class="pilcrow">¶</a></p>
+<p id="section-1-1">OAuth 2.1 (<span>[<a href="#OAUTH-FRAMEWORK" class="cite xref">OAUTH-FRAMEWORK</a>]</span>) access tokens authorize access to protected
+resources. In many deployments, however, a protected resource cannot determine whether a
+requested operation is acceptable based only on the access token that accompanies the request.
+The access token might establish that the caller is authorized to interact with the protected
+resource, but a particular operation can still require additional, transaction-specific
+authorization.<a href="#section-1-1" class="pilcrow">¶</a></p>
+<p id="section-1-2">This situation arises when the protected resource needs confirmation that a concrete transaction
+has been approved by an appropriate party. The approving party might be the human user on whose
+behalf the request is made, a different resource owner, or an organizational authority such as
+an administrator, manager, data owner, or policy decision point.<a href="#section-1-2" class="pilcrow">¶</a></p>
+<p id="section-1-3">This document defines a transaction authorization challenge. A protected resource uses this
+challenge to request additional authorization for a specific operation.  The challenge is
+relayed to a client, which presents it to an authorization server. The authorization server
+validates the challenge, obtains any required approval, and issues a transaction token as
+specified by <span>[<a href="#TXN-TOKENS" class="cite xref">TXN-TOKENS</a>]</span>. The transaction token is then
+presented to the protected resource as evidence that the challenged operation was authorized.<a href="#section-1-3" class="pilcrow">¶</a></p>
+<p id="section-1-4">This mechanism is complementary to OAuth step-up authentication defined in <span>[<a href="#OAUTH-STEP-UP" class="cite xref">OAUTH-STEP-UP</a>]</span>.
+Step-up authentication enables a protected resource to require stronger or fresher authentication
+of a user. A transaction authorization challenge instead requests authorization for a specific
+transaction. The approving party can be different from the subject associated with the access token
+used for the original request.<a href="#section-1-4" class="pilcrow">¶</a></p>
+<div id="human-approval-for-agent-mediated-actions">
+<section id="section-1.1">
+        <h3 id="name-human-approval-for-agent-me">
+<a href="#section-1.1" class="section-number selfRef">1.1. </a><a href="#name-human-approval-for-agent-me" class="section-name selfRef">Human Approval for Agent-Mediated Actions</a>
+        </h3>
+<p id="section-1.1-1">Software agents, automated workflows, and delegated services can perform operations on behalf of
+users. Some operations are sufficiently sensitive that a protected resource might require explicit
+approval before processing them. Examples include sending a payment, publishing content, deleting
+data, modifying access policy, or disclosing sensitive information.<a href="#section-1.1-1" class="pilcrow">¶</a></p>
+<p id="section-1.1-2">Local confirmation mechanisms within an agent framework can reduce risk, but they are not always
+visible to the protected resource and do not necessarily produce authorization evidence that the
+protected resource can validate.  A transaction authorization challenge allows the protected resource
+to require explicit authorization for the concrete operation and to receive a transaction token
+representing that authorization.<a href="#section-1.1-2" class="pilcrow">¶</a></p>
+</section>
+</div>
+<div id="authorization-by-a-different-resource-owner">
+<section id="section-1.2">
+        <h3 id="name-authorization-by-a-differen">
+<a href="#section-1.2" class="section-number selfRef">1.2. </a><a href="#name-authorization-by-a-differen" class="section-name selfRef">Authorization by a Different Resource Owner</a>
+        </h3>
+<p id="section-1.2-1">The party that initiated an operation is not always the party authorized to approve it. For example,
+an agent acting on behalf of one user might request access to a resource owned or controlled by
+another user. The protected resource can determine that approval from the resource owner, or
+from another party authorized to act for that resource owner, is required before the operation
+can proceed.<a href="#section-1.2-1" class="pilcrow">¶</a></p>
+<p id="section-1.2-2">In this case, the transaction authorization challenge allows the protected resource to describe the
+requested operation and the authorization server to determine the appropriate approving party. The
+resulting transaction token represents authorization of the challenged operation by the party
+selected according to authorization server policy.<a href="#section-1.2-2" class="pilcrow">¶</a></p>
+</section>
+</div>
+<div id="organizational-approval">
+<section id="section-1.3">
+        <h3 id="name-organizational-approval">
+<a href="#section-1.3" class="section-number selfRef">1.3. </a><a href="#name-organizational-approval" class="section-name selfRef">Organizational Approval</a>
+        </h3>
+<p id="section-1.3-1">Some operations require approval by an organizational authority rather than by an individual end
+user. Examples include approving access to regulated data, authorizing a production deployment,
+granting elevated administrative access, or permitting data transfer to an external party.<a href="#section-1.3-1" class="pilcrow">¶</a></p>
+<p id="section-1.3-2">A transaction authorization challenge allows the protected resource to request authorization evidence from
+an authorization server or associated policy infrastructure.  The authorization server validates the challenge,
+applies organizational policy, obtains any required approval, and issues a transaction token only when the
+required authorization has been obtained.<a href="#section-1.3-2" class="pilcrow">¶</a></p>
+</section>
+</div>
 </section>
 </div>
 <div id="conventions-and-definitions">
@@ -1190,39 +1351,916 @@ svg :is([fill="white"], [fill^="#fff"]) {
 "<span class="bcp14">MAY</span>", and "<span class="bcp14">OPTIONAL</span>" in this document are to be interpreted as
 described in BCP 14 <span>[<a href="#RFC2119" class="cite xref">RFC2119</a>]</span> <span>[<a href="#RFC8174" class="cite xref">RFC8174</a>]</span> when, and only when, they
 appear in all capitals, as shown here.<a href="#section-2-1" class="pilcrow">¶</a></p>
+<p id="section-2-2">This document uses the terms "client", "authorization server", "access token", "refresh token", and "protected
+resource" as defined by <span>[<a href="#OAUTH-FRAMEWORK" class="cite xref">OAUTH-FRAMEWORK</a>]</span>.<a href="#section-2-2" class="pilcrow">¶</a></p>
+<p id="section-2-3">This document uses the term "transaction token" as defined by <span>[<a href="#TXN-TOKENS" class="cite xref">TXN-TOKENS</a>]</span>.<a href="#section-2-3" class="pilcrow">¶</a></p>
+<p id="section-2-4">This document defines the following additional terms:<a href="#section-2-4" class="pilcrow">¶</a></p>
+<span class="break"></span><dl class="dlParallel" id="section-2-5">
+        <dt id="section-2-5.1">Approving Party:</dt>
+        <dd style="margin-left: 1.5em" id="section-2-5.2">
+          <p id="section-2-5.2.1">The human user, resource owner, organizational authority, or policy authority whose approval is required
+before the challenged transaction can proceed.<a href="#section-2-5.2.1" class="pilcrow">¶</a></p>
+</dd>
+        <dd class="break"></dd>
+<dt id="section-2-5.3">Agent:</dt>
+        <dd style="margin-left: 1.5em" id="section-2-5.4">
+          <p id="section-2-5.4.1">A software component, automated workflow, delegated service, or other intermediary that attempts an operation
+at a protected resource and relays a transaction authorization challenge to a client.<a href="#section-2-5.4.1" class="pilcrow">¶</a></p>
+</dd>
+        <dd class="break"></dd>
+<dt id="section-2-5.5">Transaction Authorization Challenge:</dt>
+        <dd style="margin-left: 1.5em" id="section-2-5.6">
+          <p id="section-2-5.6.1">A challenge returned by a protected resource to indicate that a specific requested operation requires
+transaction-specific authorization before it can proceed.<a href="#section-2-5.6.1" class="pilcrow">¶</a></p>
+</dd>
+      <dd class="break"></dd>
+</dl>
+</section>
+</div>
+<div id="architecture">
+<section id="section-3">
+      <h2 id="name-architecture">
+<a href="#section-3" class="section-number selfRef">3. </a><a href="#name-architecture" class="section-name selfRef">Architecture</a>
+      </h2>
+<p id="section-3-1">A transaction authorization challenge involves a protected resource, an agent, a client, an authorization
+server, and an approving party.<a href="#section-3-1" class="pilcrow">¶</a></p>
+<p id="section-3-2">The protected resource receives a request and determines whether the authorization currently presented
+with the request is sufficient. If the protected resource determines that the requested operation requires
+transaction-specific authorization, it returns a transaction authorization challenge.<a href="#section-3-2" class="pilcrow">¶</a></p>
+<p id="section-3-3">The agent is the component that attempted the operation at the protected resource.  The agent relays
+the transaction authorization challenge to the client and later presents the resulting transaction token
+to the protected resource. The agent is not trusted to modify the contents of the challenge or the resulting
+transaction token.<a href="#section-3-3" class="pilcrow">¶</a></p>
+<p id="section-3-4">The client receives the transaction authorization challenge from the agent and presents it to the authorization
+server. The client is responsible for mediating the interaction between the agent-facing environment and the
+authorization server. The client does not need to interpret all application-specific details of the challenged
+transaction, but it <span class="bcp14">MUST</span> preserve the integrity of the challenge when presenting it to the authorization server.<a href="#section-3-4" class="pilcrow">¶</a></p>
+<p id="section-3-5">The authorization server validates the transaction authorization challenge, determines the approving party,
+obtains any required approval, and issues a transaction token. The authorization server can use local
+policy, resource metadata, resource-owner information, organizational policy, or other authorization context
+to determine whether the requested operation can be approved.<a href="#section-3-5" class="pilcrow">¶</a></p>
+<p id="section-3-6">The approving party is the human user, resource owner, organizational authority, or policy authority whose
+approval is required. The approving party can be the same subject on whose behalf the agent is acting, but
+this is not required.<a href="#section-3-6" class="pilcrow">¶</a></p>
+<p id="section-3-7">The following figure shows the basic protocol flow:<a href="#section-3-7" class="pilcrow">¶</a></p>
+<span id="name-overall-architecture-of-tra"></span><div id="fig-architecture">
+<figure id="figure-1">
+        <div id="section-3-8.1">
+          <div class="alignLeft art-svg artwork" id="section-3-8.1.1">
+<svg xmlns="http://www.w3.org/2000/svg" version="1.1" height="272" width="480" viewBox="0 0 480 272" class="diagram" text-anchor="middle" font-family="monospace" font-size="13px" stroke-linecap="round">
+              <path d="M 8,32 L 8,64" fill="none" stroke="black"></path>
+              <path d="M 8,128 L 8,160" fill="none" stroke="black"></path>
+              <path d="M 8,224 L 8,256" fill="none" stroke="black"></path>
+              <path d="M 48,72 L 48,120" fill="none" stroke="black"></path>
+              <path d="M 48,168 L 48,216" fill="none" stroke="black"></path>
+              <path d="M 96,32 L 96,64" fill="none" stroke="black"></path>
+              <path d="M 152,224 L 152,256" fill="none" stroke="black"></path>
+              <path d="M 168,32 L 168,64" fill="none" stroke="black"></path>
+              <path d="M 192,128 L 192,160" fill="none" stroke="black"></path>
+              <path d="M 232,32 L 232,64" fill="none" stroke="black"></path>
+              <path d="M 304,32 L 304,64" fill="none" stroke="black"></path>
+              <path d="M 472,32 L 472,64" fill="none" stroke="black"></path>
+              <path d="M 8,32 L 96,32" fill="none" stroke="black"></path>
+              <path d="M 168,32 L 232,32" fill="none" stroke="black"></path>
+              <path d="M 304,32 L 472,32" fill="none" stroke="black"></path>
+              <path d="M 104,48 L 160,48" fill="none" stroke="black"></path>
+              <path d="M 240,48 L 296,48" fill="none" stroke="black"></path>
+              <path d="M 8,64 L 96,64" fill="none" stroke="black"></path>
+              <path d="M 168,64 L 232,64" fill="none" stroke="black"></path>
+              <path d="M 304,64 L 472,64" fill="none" stroke="black"></path>
+              <path d="M 8,128 L 192,128" fill="none" stroke="black"></path>
+              <path d="M 8,160 L 192,160" fill="none" stroke="black"></path>
+              <path d="M 8,224 L 152,224" fill="none" stroke="black"></path>
+              <path d="M 8,256 L 152,256" fill="none" stroke="black"></path>
+              <polygon class="arrowhead" points="304,48 292,42.4 292,53.6" fill="black" transform="rotate(0,296,48)"></polygon>
+              <polygon class="arrowhead" points="248,48 236,42.4 236,53.6" fill="black" transform="rotate(180,240,48)"></polygon>
+              <polygon class="arrowhead" points="168,48 156,42.4 156,53.6" fill="black" transform="rotate(0,160,48)"></polygon>
+              <polygon class="arrowhead" points="112,48 100,42.4 100,53.6" fill="black" transform="rotate(180,104,48)"></polygon>
+              <polygon class="arrowhead" points="56,216 44,210.4 44,221.6" fill="black" transform="rotate(90,48,216)"></polygon>
+              <polygon class="arrowhead" points="56,120 44,114.4 44,125.6" fill="black" transform="rotate(90,48,120)"></polygon>
+              <g class="text">
+                <text x="52" y="52">Client</text>
+                <text x="200" y="52">Agent</text>
+                <text x="352" y="52">Protected</text>
+                <text x="428" y="52">Resource</text>
+                <text x="104" y="100">transaction</text>
+                <text x="208" y="100">authorization</text>
+                <text x="304" y="100">challenge</text>
+                <text x="72" y="148">Authorization</text>
+                <text x="156" y="148">Server</text>
+                <text x="92" y="196">approval</text>
+                <text x="176" y="196">interaction</text>
+                <text x="56" y="244">Approving</text>
+                <text x="120" y="244">Party</text>
+              </g>
+            </svg><a href="#section-3-8.1.1" class="pilcrow">¶</a>
+</div>
+</div>
+<figcaption><a href="#figure-1" class="selfRef">Figure 1</a>:
+<a href="#name-overall-architecture-of-tra" class="selfRef">Overall architecture of Transaction Authorization Challenge</a>
+        </figcaption></figure>
+</div>
+<p id="section-3-9">The flow is as follows:<a href="#section-3-9" class="pilcrow">¶</a></p>
+<ol start="1" type="1" class="normal type-1" id="section-3-10">
+<li id="section-3-10.1">
+          <p id="section-3-10.1.1">The agent sends a request to the protected resource using its existing authorization context.<a href="#section-3-10.1.1" class="pilcrow">¶</a></p>
+</li>
+        <li id="section-3-10.2">
+          <p id="section-3-10.2.1">The protected resource determines that the request requires transaction-specific authorization.<a href="#section-3-10.2.1" class="pilcrow">¶</a></p>
+</li>
+        <li id="section-3-10.3">
+          <p id="section-3-10.3.1">The protected resource returns a transaction authorization challenge to the agent.<a href="#section-3-10.3.1" class="pilcrow">¶</a></p>
+</li>
+        <li id="section-3-10.4">
+          <p id="section-3-10.4.1">The agent relays the transaction authorization challenge to the client.<a href="#section-3-10.4.1" class="pilcrow">¶</a></p>
+</li>
+        <li id="section-3-10.5">
+          <p id="section-3-10.5.1">The client presents the transaction authorization challenge to the authorization server.<a href="#section-3-10.5.1" class="pilcrow">¶</a></p>
+</li>
+        <li id="section-3-10.6">
+          <p id="section-3-10.6.1">The authorization server validates the challenge, determines the approving party, and obtains any required approval.<a href="#section-3-10.6.1" class="pilcrow">¶</a></p>
+</li>
+        <li id="section-3-10.7">
+          <p id="section-3-10.7.1">The authorization server issues a transaction token to the client.<a href="#section-3-10.7.1" class="pilcrow">¶</a></p>
+</li>
+        <li id="section-3-10.8">
+          <p id="section-3-10.8.1">The client provides the transaction token to the agent.<a href="#section-3-10.8.1" class="pilcrow">¶</a></p>
+</li>
+        <li id="section-3-10.9">
+          <p id="section-3-10.9.1">The agent retries or continues the request and presents the transaction token to the protected resource.<a href="#section-3-10.9.1" class="pilcrow">¶</a></p>
+</li>
+        <li id="section-3-10.10">
+          <p id="section-3-10.10.1">The protected resource validates the transaction token and processes the request if the token authorizes the
+challenged operation.<a href="#section-3-10.10.1" class="pilcrow">¶</a></p>
+</li>
+      </ol>
+</section>
+</div>
+<div id="transaction-authorization-challenge">
+<section id="section-4">
+      <h2 id="name-transaction-authorization-c">
+<a href="#section-4" class="section-number selfRef">4. </a><a href="#name-transaction-authorization-c" class="section-name selfRef">Transaction Authorization Challenge</a>
+      </h2>
+<p id="section-4-1">A transaction authorization challenge is a signed JWT (<span>[<a href="#JWT" class="cite xref">JWT</a>]</span>) generated by a protected resource to
+request transaction-specific authorization for a particular operation. The challenge describes the operation to be
+authorized, identifies the authorization server expected to process the challenge, and contains freshness and
+integrity protection.<a href="#section-4-1" class="pilcrow">¶</a></p>
+<p id="section-4-2">The challenge is consumed by the authorization server and can also be validated by the client before the client
+presents it to the authorization server. The agent relays the challenge, but it is not trusted to modify the challenge
+or to describe the challenged transaction.<a href="#section-4-2" class="pilcrow">¶</a></p>
+<div id="challenge-capability-signal">
+<section id="section-4.1">
+        <h3 id="name-challenge-capability-signal">
+<a href="#section-4.1" class="section-number selfRef">4.1. </a><a href="#name-challenge-capability-signal" class="section-name selfRef">Challenge Capability Signal</a>
+        </h3>
+<p id="section-4.1-1">An agent indicates that it supports the transaction authorization challenge mechanism by sending the
+<code>Accept-Txn-Challenge</code> header field with a true value in requests to a protected resource.<a href="#section-4.1-1" class="pilcrow">¶</a></p>
+<p id="section-4.1-2">The <code>Accept-Txn-Challenge</code> header field is an Item Structured Field; see <span><a href="https://rfc-editor.org/rfc/rfc9651#section-3.3" class="relref">Section 3.3</a> of [<a href="#STRUCTURED-FIELDS" class="cite xref">STRUCTURED-FIELDS</a>]</span>.
+Its value <span class="bcp14">MUST</span> be a Boolean. Any other value type <span class="bcp14">MUST</span> be handled by recipients as if the field were not present.
+For example, if this field is included multiple times, its type will become a List and the field will be ignored.<a href="#section-4.1-2" class="pilcrow">¶</a></p>
+<p id="section-4.1-3">This document does not define any parameters for the <code>Accept-Txn-Challenge</code> header field value, but future
+documents might define parameters. Receivers <span class="bcp14">MUST</span> ignore unknown parameters.<a href="#section-4.1-3" class="pilcrow">¶</a></p>
+<p id="section-4.1-4">The following example indicates support for transaction authorization challenges:<a href="#section-4.1-4" class="pilcrow">¶</a></p>
+<span id="name-agent-indicating-support-fo"></span><div id="fig-challenge-capability">
+<figure id="figure-2">
+          <div class="alignLeft art-text artwork" id="section-4.1-5.1">
+<pre>
+Accept-Txn-Challenge: ?1
+</pre>
+</div>
+<figcaption><a href="#figure-2" class="selfRef">Figure 2</a>:
+<a href="#name-agent-indicating-support-fo" class="selfRef">Agent indicating support for transaction authorization</a>
+          </figcaption></figure>
+</div>
+<p id="section-4.1-6">An <code>Accept-Txn-Challenge</code> header field with a false value has the same semantics as when the header field is not present.<a href="#section-4.1-6" class="pilcrow">¶</a></p>
+<p id="section-4.1-7">An agent <span class="bcp14">MUST NOT</span> include the <code>Accept-Txn-Challenge</code> header field unless it has a client interaction path capable
+of relaying the challenge to a client that can validate the challenge and present it to an authorization
+server.<a href="#section-4.1-7" class="pilcrow">¶</a></p>
+<p id="section-4.1-8">A protected resource <span class="bcp14">MUST NOT</span> return a transaction authorization challenge unless the request includes an
+<code>Accept-Txn-Challenge</code> header field with a true value, or the protected resource has out-of-band knowledge that
+the client supports this specification.<a href="#section-4.1-8" class="pilcrow">¶</a></p>
+</section>
+</div>
+<div id="challenge-response">
+<section id="section-4.2">
+        <h3 id="name-challenge-response">
+<a href="#section-4.2" class="section-number selfRef">4.2. </a><a href="#name-challenge-response" class="section-name selfRef">Challenge Response</a>
+        </h3>
+<p id="section-4.2-1">When a protected resource requires transaction-specific authorization, it returns an HTTP error response
+indicating that transaction authorization is required. This document defines the OAuth error code
+<code>transaction_authorization_required</code> for this purpose.<a href="#section-4.2-1" class="pilcrow">¶</a></p>
+<p id="section-4.2-2">For example:<a href="#section-4.2-2" class="pilcrow">¶</a></p>
+<span id="name-protected-resource-requesti"></span><div id="fig-challenge-response">
+<figure id="figure-3">
+          <div class="alignLeft art-text artwork" id="section-4.2-3.1">
+<pre>
+HTTP/1.1 401 Unauthorized
+WWW-Authenticate: Bearer error="transaction_authorization_required",
+  error_description="Transaction-specific authorization is required",
+  transaction_challenge="eyJhbGciOiJFUzI1NiIsInR5cCI6InR4bi1hdXRoei1jaGFsbGVuZ2Urand0..."
+</pre>
+</div>
+<figcaption><a href="#figure-3" class="selfRef">Figure 3</a>:
+<a href="#name-protected-resource-requesti" class="selfRef">Protected resource requesting transaction authorization</a>
+          </figcaption></figure>
+</div>
+<p id="section-4.2-4">The <code>transaction_challenge</code> parameter contains a transaction authorization challenge encoded as a JWS Compact
+Serialization object as specified in <span>[<a href="#JWS" class="cite xref">JWS</a>]</span>. The challenge <span class="bcp14">MUST</span> be signed by the protected resource.<a href="#section-4.2-4" class="pilcrow">¶</a></p>
+<p id="section-4.2-5">The <code>error_description</code> parameter <span class="bcp14">MAY</span> be included to provide a human-readable diagnostic description. The
+<code>error_description</code> parameter <span class="bcp14">MUST NOT</span> be used as the basis for an authorization decision.<a href="#section-4.2-5" class="pilcrow">¶</a></p>
+<p id="section-4.2-6">A protected resource <span class="bcp14">SHOULD</span> use status code 401 when the request was understood but requires additional
+transaction-specific authorization. Other status codes <span class="bcp14">MAY</span> be used when appropriate for the application
+protocol.<a href="#section-4.2-6" class="pilcrow">¶</a></p>
+<div id="challenge-representation">
+<section id="section-4.2.1">
+          <h4 id="name-challenge-representation">
+<a href="#section-4.2.1" class="section-number selfRef">4.2.1. </a><a href="#name-challenge-representation" class="section-name selfRef">Challenge Representation</a>
+          </h4>
+<p id="section-4.2.1-1">A transaction authorization challenge is a JWT secured using JWS. The JOSE header <code>typ</code> value <span class="bcp14">MUST</span> be
+<code>txn-authz-challenge+jwt</code>. The <code>alg</code> value <span class="bcp14">MUST</span> identify an asymmetric digital signature algorithm.
+The <code>alg</code> value <span class="bcp14">MUST NOT</span> be <code>none</code>.<a href="#section-4.2.1-1" class="pilcrow">¶</a></p>
+<p id="section-4.2.1-2">The <code>kid</code> value in the JOSE header is used to identify the signing key in the protected resource's JWK Set.<a href="#section-4.2.1-2" class="pilcrow">¶</a></p>
+<p id="section-4.2.1-3">The challenge claims identify the protected resource, the authorization server expected to process the
+challenge, the transaction being authorized, and the intended audience of the resulting transaction token.<a href="#section-4.2.1-3" class="pilcrow">¶</a></p>
+</section>
+</div>
+<div id="challenge-claims">
+<section id="section-4.2.2">
+          <h4 id="name-challenge-claims">
+<a href="#section-4.2.2" class="section-number selfRef">4.2.2. </a><a href="#name-challenge-claims" class="section-name selfRef">Challenge Claims</a>
+          </h4>
+<p id="section-4.2.2-1">A transaction authorization challenge <span class="bcp14">MUST</span> contain the following claims:<a href="#section-4.2.2-1" class="pilcrow">¶</a></p>
+<span class="break"></span><dl class="dlParallel" id="section-4.2.2-2">
+            <dt id="section-4.2.2-2.1">
+<code>iss</code>:</dt>
+            <dd style="margin-left: 1.5em" id="section-4.2.2-2.2">
+              <p id="section-4.2.2-2.2.1">Issuer claim defined in <span>[<a href="#JWT" class="cite xref">JWT</a>]</span>. Identifier of the protected resource that generated the challenge. The
+transaction token issued in response to the challenge <span class="bcp14">MUST</span> use this value as its audience unless an
+application profile defines a different audience binding.<a href="#section-4.2.2-2.2.1" class="pilcrow">¶</a></p>
+</dd>
+            <dd class="break"></dd>
+<dt id="section-4.2.2-2.3">
+<code>aud</code>:</dt>
+            <dd style="margin-left: 1.5em" id="section-4.2.2-2.4">
+              <p id="section-4.2.2-2.4.1">Audience claim defined in <span>[<a href="#JWT" class="cite xref">JWT</a>]</span>. Identifier of the authorization server expected to validate the challenge
+and issue a transaction token for the challenged operation. The value is selected by the protected resource
+and need not be the issuer of the access token presented with the original request. The protected resource
+<span class="bcp14">MUST</span> select an authorization server that it trusts to evaluate the challenge and issue transaction tokens
+for the requested operation.<a href="#section-4.2.2-2.4.1" class="pilcrow">¶</a></p>
+</dd>
+            <dd class="break"></dd>
+<dt id="section-4.2.2-2.5">
+<code>iat</code>:</dt>
+            <dd style="margin-left: 1.5em" id="section-4.2.2-2.6">
+              <p id="section-4.2.2-2.6.1">Issued At claim defined in <span>[<a href="#JWT" class="cite xref">JWT</a>]</span>. Time at which the challenge was issued.<a href="#section-4.2.2-2.6.1" class="pilcrow">¶</a></p>
+</dd>
+            <dd class="break"></dd>
+<dt id="section-4.2.2-2.7">
+<code>exp</code>:</dt>
+            <dd style="margin-left: 1.5em" id="section-4.2.2-2.8">
+              <p id="section-4.2.2-2.8.1">Expiration Time claim defined in <span>[<a href="#JWT" class="cite xref">JWT</a>]</span>. Time at which the challenge expires.<a href="#section-4.2.2-2.8.1" class="pilcrow">¶</a></p>
+</dd>
+            <dd class="break"></dd>
+<dt id="section-4.2.2-2.9">
+<code>jti</code>:</dt>
+            <dd style="margin-left: 1.5em" id="section-4.2.2-2.10">
+              <p id="section-4.2.2-2.10.1">JWT ID claim defined in <span>[<a href="#JWT" class="cite xref">JWT</a>]</span>. Unique identifier for the challenge object.<a href="#section-4.2.2-2.10.1" class="pilcrow">¶</a></p>
+</dd>
+            <dd class="break"></dd>
+<dt id="section-4.2.2-2.11">
+<code>txn</code>:</dt>
+            <dd style="margin-left: 1.5em" id="section-4.2.2-2.12">
+              <p id="section-4.2.2-2.12.1">Transaction Identifier claim defined in <span>[<a href="#SET" class="cite xref">SET</a>]</span>. Transaction identifier for the challenged operation.
+The transaction token issued in response to the challenge <span class="bcp14">MUST</span> contain the same transaction identifier. The
+transaction identifier <span class="bcp14">MUST</span> be unique within the context of the protected resource for the lifetime of the
+challenge and any transaction token issued in response to it.<a href="#section-4.2.2-2.12.1" class="pilcrow">¶</a></p>
+</dd>
+            <dd class="break"></dd>
+<dt id="section-4.2.2-2.13">
+<code>authorization_details</code>:</dt>
+            <dd style="margin-left: 1.5em" id="section-4.2.2-2.14">
+              <p id="section-4.2.2-2.14.1">Authorization Details claim as defined in <span>[<a href="#OAUTH-RAR" class="cite xref">OAUTH-RAR</a>]</span>. Structured description of the operation
+for which transaction-specific authorization is requested.<a href="#section-4.2.2-2.14.1" class="pilcrow">¶</a></p>
+</dd>
+            <dd class="break"></dd>
+<dt id="section-4.2.2-2.15">
+<code>reason</code>:</dt>
+            <dd style="margin-left: 1.5em" id="section-4.2.2-2.16">
+              <p id="section-4.2.2-2.16.1">Human-readable explanation of why transaction-specific authorization is required. This value is intended for
+display to the client, the user, or the approving party. The value is integrity protected as part of the
+challenge.<a href="#section-4.2.2-2.16.1" class="pilcrow">¶</a></p>
+</dd>
+          <dd class="break"></dd>
+</dl>
+<p id="section-4.2.2-3">A transaction authorization challenge <span class="bcp14">MAY</span> contain the following claims:<a href="#section-4.2.2-3" class="pilcrow">¶</a></p>
+<span class="break"></span><dl class="dlParallel" id="section-4.2.2-4">
+            <dt id="section-4.2.2-4.1">
+<code>reason_uri</code>:</dt>
+            <dd style="margin-left: 1.5em" id="section-4.2.2-4.2">
+              <p id="section-4.2.2-4.2.1">URI identifying additional information about the transaction authorization request. The URI <span class="bcp14">MUST</span> be controlled by
+the protected resource or by a party trusted by the protected resource. The client and authorization server <span class="bcp14">MAY</span>
+dereference this URI to obtain additional information for display or policy evaluation.<a href="#section-4.2.2-4.2.1" class="pilcrow">¶</a></p>
+</dd>
+            <dd class="break"></dd>
+<dt id="section-4.2.2-4.3">
+<code>act</code>:</dt>
+            <dd style="margin-left: 1.5em" id="section-4.2.2-4.4">
+              <p id="section-4.2.2-4.4.1">Actor claim defined in <span>[<a href="#OAUTH-TOKEN-EXCHANGE" class="cite xref">OAUTH-TOKEN-EXCHANGE</a>]</span>. Information about the actor or delegation context
+associated with the request that caused the challenge. The value identifies the party that attempted the
+challenged operation, or the delegated actor acting on behalf of another party.<a href="#section-4.2.2-4.4.1" class="pilcrow">¶</a></p>
+</dd>
+          <dd class="break"></dd>
+</dl>
+<p id="section-4.2.2-5">The challenge <span class="bcp14">MAY</span> contain additional claims. The authorization server <span class="bcp14">MUST</span> ignore claims it does not understand
+unless local policy requires otherwise.<a href="#section-4.2.2-5" class="pilcrow">¶</a></p>
+<p id="section-4.2.2-6">Information obtained from <code>reason_uri</code> <span class="bcp14">MUST NOT</span> override the security-relevant contents of the signed challenge
+unless an application profile defines how that information is authenticated and bound to the challenge.<a href="#section-4.2.2-6" class="pilcrow">¶</a></p>
+<p id="section-4.2.2-7">Application profiles <span class="bcp14">MAY</span> define additional claims that bind the challenge to the original request or to selected
+security-relevant request components.<a href="#section-4.2.2-7" class="pilcrow">¶</a></p>
+<p id="section-4.2.2-8">The following example shows the claims of a transaction authorization challenge:<a href="#section-4.2.2-8" class="pilcrow">¶</a></p>
+<span id="name-example-transaction-authori"></span><div id="fig-challenge-example">
+<figure id="figure-4">
+            <div class="alignLeft art-text artwork" id="section-4.2.2-9.1">
+<pre>
+{
+  "iss": "https://resource.example.com",
+  "aud": "https://as.example.com",
+  "iat": 1710000000,
+  "exp": 1710000300,
+  "jti": "f1f7c8c4-2f8c-4c6a-83d1-example",
+  "txn": "97053963-771d-49cc-a4e3-20aad399c312",
+  "authorization_details": [
+    {
+      "type": "payment",
+      "actions": ["initiate"],
+      "locations": ["https://payments.example.com/accounts/123"],
+      "instructedAmount": {
+        "currency": "GBP",
+        "amount": "5000.00"
+      },
+      "creditorName": "Example Ltd"
+    }
+  ],
+  "reason": "Approval is required before initiating this payment.",
+  "reason_uri": "https://resource.example.com/transactions/97053963-771d-49cc-a4e3-20aad399c312",
+  "act": {
+    "sub": "spiffe://example.com/aiagent/6526f880-1895-400b-a929-11a7eecf9753"
+  }
+}
+</pre>
+</div>
+<figcaption><a href="#figure-4" class="selfRef">Figure 4</a>:
+<a href="#name-example-transaction-authori" class="selfRef">Example transaction authorization challenge</a>
+            </figcaption></figure>
+</div>
+</section>
+</div>
+</section>
+</div>
+<div id="challenge-signing-and-key-discovery">
+<section id="section-4.3">
+        <h3 id="name-challenge-signing-and-key-d">
+<a href="#section-4.3" class="section-number selfRef">4.3. </a><a href="#name-challenge-signing-and-key-d" class="section-name selfRef">Challenge Signing and Key Discovery</a>
+        </h3>
+<p id="section-4.3-1">A protected resource that issues transaction authorization challenges <span class="bcp14">MUST</span> sign each challenge using an
+asymmetric signing key. The client and authorization server <span class="bcp14">MUST</span> validate the challenge signature before using
+any claim from the challenge for an authorization decision or for display to the user.<a href="#section-4.3-1" class="pilcrow">¶</a></p>
+<p id="section-4.3-2">A protected resource that issues transaction authorization challenges <span class="bcp14">MUST</span> make the public keys needed to
+validate those challenges available to clients and authorization servers. This document defines protected
+resource metadata parameters, using the OAuth 2.0 Protected Resource Metadata mechanism described in
+<span>[<a href="#OAUTH-PROT-METADATA" class="cite xref">OAUTH-PROT-METADATA</a>]</span>. Deployments <span class="bcp14">MAY</span> also use preconfigured trust relationships or other
+mechanisms to establish the same keying information.<a href="#section-4.3-2" class="pilcrow">¶</a></p>
+<p id="section-4.3-3">This document defines the following protected resource metadata parameters:<a href="#section-4.3-3" class="pilcrow">¶</a></p>
+<span class="break"></span><dl class="dlParallel" id="section-4.3-4">
+          <dt id="section-4.3-4.1">
+<code>txn_challenge_jwks_uri</code>:</dt>
+          <dd style="margin-left: 1.5em" id="section-4.3-4.2">
+            <p id="section-4.3-4.2.1">URL of the protected resource's JSON Web Key Set containing public keys used to validate transaction authorization challenges.<a href="#section-4.3-4.2.1" class="pilcrow">¶</a></p>
+</dd>
+          <dd class="break"></dd>
+<dt id="section-4.3-4.3">
+<code>txn_challenge_signing_alg_values_supported</code>:</dt>
+          <dd style="margin-left: 1.5em" id="section-4.3-4.4">
+            <p id="section-4.3-4.4.1">JSON array containing the JWS <code>alg</code> values supported by the protected resource for transaction authorization challenges.<a href="#section-4.3-4.4.1" class="pilcrow">¶</a></p>
+</dd>
+        <dd class="break"></dd>
+</dl>
+<p id="section-4.3-5">If a protected resource uses the same JWK Set for transaction authorization challenges and for other protected
+resource signing keys, the value of <code>txn_challenge_jwks_uri</code> <span class="bcp14">MAY</span> be the same as another JWK Set URI published by
+the protected resource.<a href="#section-4.3-5" class="pilcrow">¶</a></p>
+<p id="section-4.3-6">When the challenge-signing key is published in the JWK Set identified by <code>txn_challenge_jwks_uri</code>, the <code>kid</code> value in the JOSE header of a
+transaction authorization challenge <span class="bcp14">MUST</span> identify the signing key in that JWK Set.<a href="#section-4.3-6" class="pilcrow">¶</a></p>
+<p id="section-4.3-7">If the challenge cannot be validated, the client or authorization server <span class="bcp14">MUST NOT</span> treat the challenge as authentic.<a href="#section-4.3-7" class="pilcrow">¶</a></p>
+</section>
+</div>
+<div id="client-processing">
+<section id="section-4.4">
+        <h3 id="name-client-processing">
+<a href="#section-4.4" class="section-number selfRef">4.4. </a><a href="#name-client-processing" class="section-name selfRef">Client Processing</a>
+        </h3>
+<p id="section-4.4-1">The client <span class="bcp14">MUST</span> verify that the <code>aud</code> claim identifies the authorization server to which the client intends to present
+the challenge. The client <span class="bcp14">MUST NOT</span> modify the challenge before presenting it to the authorization server.<a href="#section-4.4-1" class="pilcrow">¶</a></p>
+<p id="section-4.4-2">The client <span class="bcp14">MAY</span> display the challenge contents to the user before sending the challenge to the authorization server.
+This allows the user to decide whether to continue and whether to disclose the challenged transaction to the authorization server.<a href="#section-4.4-2" class="pilcrow">¶</a></p>
+<p id="section-4.4-3">When displaying challenge information, the client <span class="bcp14">MUST</span> use information obtained from the validated challenge or from
+protected resource state identified by the validated challenge. The client <span class="bcp14">MUST NOT</span> rely on an unprotected description
+supplied by the agent.<a href="#section-4.4-3" class="pilcrow">¶</a></p>
+<p id="section-4.4-4">If the user declines to continue, or if the client cannot validate the challenge, the client <span class="bcp14">MUST NOT</span> present the challenge
+to the authorization server.<a href="#section-4.4-4" class="pilcrow">¶</a></p>
+</section>
+</div>
+<div id="authorization-server-processing">
+<section id="section-4.5">
+        <h3 id="name-authorization-server-proces">
+<a href="#section-4.5" class="section-number selfRef">4.5. </a><a href="#name-authorization-server-proces" class="section-name selfRef">Authorization Server Processing</a>
+        </h3>
+<p id="section-4.5-1">The authorization server <span class="bcp14">MUST</span> validate the transaction authorization challenge before issuing a transaction token.<a href="#section-4.5-1" class="pilcrow">¶</a></p>
+<p id="section-4.5-2">At a minimum, the authorization server <span class="bcp14">MUST</span> verify that:<a href="#section-4.5-2" class="pilcrow">¶</a></p>
+<ul class="normal">
+<li class="normal" id="section-4.5-3.1">
+            <p id="section-4.5-3.1.1">the challenge signature is valid;<a href="#section-4.5-3.1.1" class="pilcrow">¶</a></p>
+</li>
+          <li class="normal" id="section-4.5-3.2">
+            <p id="section-4.5-3.2.1">the challenge was issued by a protected resource recognized by the authorization server;<a href="#section-4.5-3.2.1" class="pilcrow">¶</a></p>
+</li>
+          <li class="normal" id="section-4.5-3.3">
+            <p id="section-4.5-3.3.1">the challenge has not expired;<a href="#section-4.5-3.3.1" class="pilcrow">¶</a></p>
+</li>
+          <li class="normal" id="section-4.5-3.4">
+            <p id="section-4.5-3.4.1">the <code>aud</code> claim identifies the authorization server;<a href="#section-4.5-3.4.1" class="pilcrow">¶</a></p>
+</li>
+          <li class="normal" id="section-4.5-3.5">
+            <p id="section-4.5-3.5.1">the authorization server is willing to issue transaction tokens for the protected resource identified by the <code>iss</code>
+claim and for the requested operation;<a href="#section-4.5-3.5.1" class="pilcrow">¶</a></p>
+</li>
+          <li class="normal" id="section-4.5-3.6">
+            <p id="section-4.5-3.6.1">the transaction token issued in response to the challenge will use the protected resource identified by the <code>iss</code> claim
+as its audience, unless an application profile defines a different audience binding;<a href="#section-4.5-3.6.1" class="pilcrow">¶</a></p>
+</li>
+          <li class="normal" id="section-4.5-3.7">
+            <p id="section-4.5-3.7.1">the transaction identifier is present and acceptable;<a href="#section-4.5-3.7.1" class="pilcrow">¶</a></p>
+</li>
+          <li class="normal" id="section-4.5-3.8">
+            <p id="section-4.5-3.8.1">the requested operation is sufficiently described; and<a href="#section-4.5-3.8.1" class="pilcrow">¶</a></p>
+</li>
+          <li class="normal" id="section-4.5-3.9">
+            <p id="section-4.5-3.9.1">the client is permitted to request transaction authorization for the challenged operation.<a href="#section-4.5-3.9.1" class="pilcrow">¶</a></p>
+</li>
+        </ul>
+<p id="section-4.5-4">When requester context, such as the <code>act</code> claim, is present in the challenge, the authorization server <span class="bcp14">MUST</span> consider that
+context when determining whether the challenged operation can be approved.<a href="#section-4.5-4" class="pilcrow">¶</a></p>
+<p id="section-4.5-5">The authorization server determines the approving party according to local policy. The approving party can be the subject
+associated with the original request, a different resource owner, an administrator, an organizational approval workflow,
+or another policy authority.<a href="#section-4.5-5" class="pilcrow">¶</a></p>
+<p id="section-4.5-6">The authorization server <span class="bcp14">MUST</span> obtain any required approval before issuing a transaction token.  The authorization server
+<span class="bcp14">SHOULD</span> present the approving party with sufficient information to understand the operation being authorized. The
+authorization server <span class="bcp14">MUST NOT</span> rely on an unprotected description supplied by the agent as the basis for the
+authorization decision.<a href="#section-4.5-6" class="pilcrow">¶</a></p>
+<p id="section-4.5-7">If the authorization server approves the challenge, it issues a transaction token as described in <a href="#transaction-token" class="auto internal xref">Section 5</a>.
+If the authorization server rejects the challenge, cannot validate the challenge, or cannot obtain the required approval,
+it <span class="bcp14">MUST NOT</span> issue a transaction token for the challenged operation.<a href="#section-4.5-7" class="pilcrow">¶</a></p>
+</section>
+</div>
+</section>
+</div>
+<div id="transaction-token">
+<section id="section-5">
+      <h2 id="name-transaction-token">
+<a href="#section-5" class="section-number selfRef">5. </a><a href="#name-transaction-token" class="section-name selfRef">Transaction Token</a>
+      </h2>
+<p id="section-5-1">A transaction token issued in response to a transaction authorization challenge represents authorization for the
+challenged operation. The transaction token is issued by the authorization server identified by the
+<code>aud</code> claim of the transaction authorization challenge and is presented to the protected resource that issued the challenge.<a href="#section-5-1" class="pilcrow">¶</a></p>
+<p id="section-5-2">This document profiles the transaction token defined in <span>[<a href="#TXN-TOKENS" class="cite xref">TXN-TOKENS</a>]</span> for use as evidence of transaction-specific authorization.<a href="#section-5-2" class="pilcrow">¶</a></p>
+<div id="token-issuance">
+<section id="section-5.1">
+        <h3 id="name-token-issuance">
+<a href="#section-5.1" class="section-number selfRef">5.1. </a><a href="#name-token-issuance" class="section-name selfRef">Token Issuance</a>
+        </h3>
+<p id="section-5.1-1">If the authorization server approves a transaction authorization challenge, it issues a transaction token to the client.
+The authorization server <span class="bcp14">MUST NOT</span> issue a transaction token unless it has successfully validated the challenge and
+obtained any required approval.<a href="#section-5.1-1" class="pilcrow">¶</a></p>
+<p id="section-5.1-2">The transaction token <span class="bcp14">MUST</span> contain the <code>txn</code> claim from the transaction authorization challenge. The transaction token
+<span class="bcp14">MUST</span> use the <code>iss</code> value from the transaction authorization challenge as its audience unless an application profile defines
+a different audience binding.<a href="#section-5.1-2" class="pilcrow">¶</a></p>
+<p id="section-5.1-3">The transaction token <span class="bcp14">MUST</span> contain sufficient information for the protected resource to determine that the token authorizes
+the challenged operation. This information can include the <code>authorization_details</code> claim from the challenge, a reference
+to protected resource state, or other information agreed between the protected resource and authorization server.<a href="#section-5.1-3" class="pilcrow">¶</a></p>
+<p id="section-5.1-4">The transaction token <span class="bcp14">MUST</span> have a limited lifetime. The authorization server <span class="bcp14">SHOULD</span> issue transaction tokens with short
+expiration times because they represent authorization for a specific operation.<a href="#section-5.1-4" class="pilcrow">¶</a></p>
+<p id="section-5.1-5">When requester context, such as the <code>act</code> claim, is present in the transaction authorization challenge, the authorization
+server <span class="bcp14">MUST</span> include equivalent requester context in the transaction token or otherwise bind the token to that context.<a href="#section-5.1-5" class="pilcrow">¶</a></p>
+</section>
+</div>
+<div id="token-presentation">
+<section id="section-5.2">
+        <h3 id="name-token-presentation">
+<a href="#section-5.2" class="section-number selfRef">5.2. </a><a href="#name-token-presentation" class="section-name selfRef">Token Presentation</a>
+        </h3>
+<p id="section-5.2-1">The client provides the transaction token to the agent. The agent presents the transaction token to the protected resource
+together with the request for the challenged operation.<a href="#section-5.2-1" class="pilcrow">¶</a></p>
+<p id="section-5.2-2">When HTTP is used, the transaction token <span class="bcp14">MUST</span> be presented using the <code>Txn-Token</code> header field defined by <span>[<a href="#TXN-TOKENS" class="cite xref">TXN-TOKENS</a>]</span>.<a href="#section-5.2-2" class="pilcrow">¶</a></p>
+<p id="section-5.2-3">For example:<a href="#section-5.2-3" class="pilcrow">¶</a></p>
+<span id="name-presenting-a-transaction-to"></span><div id="fig-transaction-token-presentation">
+<figure id="figure-5">
+          <div class="alignLeft art-text artwork" id="section-5.2-4.1">
+<pre>
+POST /payments HTTP/1.1
+Host: resource.example.com
+Authorization: Bearer mF_9.B5f-4.1JqM
+Txn-Token: eyJhbGciOiJFUzI1NiIsInR5cCI6InR4bnRva2VuK2p3dCJ9...
+Content-Type: application/json
+
+{
+  "amount": "5000.00",
+  "currency": "GBP",
+  "recipient": "Example Ltd"
+}
+</pre>
+</div>
+<figcaption><a href="#figure-5" class="selfRef">Figure 5</a>:
+<a href="#name-presenting-a-transaction-to" class="selfRef">Presenting a transaction token to a protected resource</a>
+          </figcaption></figure>
+</div>
+<p id="section-5.2-5">The agent <span class="bcp14">MUST NOT</span> modify the transaction token. If the agent cannot present the transaction token to the protected resource,
+the challenged operation cannot be completed using this mechanism.<a href="#section-5.2-5" class="pilcrow">¶</a></p>
+</section>
+</div>
+<div id="protected-resource-validation">
+<section id="section-5.3">
+        <h3 id="name-protected-resource-validati">
+<a href="#section-5.3" class="section-number selfRef">5.3. </a><a href="#name-protected-resource-validati" class="section-name selfRef">Protected Resource Validation</a>
+        </h3>
+<p id="section-5.3-1">Before accepting a transaction token as authorization for a challenged operation, the protected resource <span class="bcp14">MUST</span> validate the
+transaction token according to <span>[<a href="#TXN-TOKENS" class="cite xref">TXN-TOKENS</a>]</span> and the requirements of this document.<a href="#section-5.3-1" class="pilcrow">¶</a></p>
+<p id="section-5.3-2">At a minimum, the protected resource <span class="bcp14">MUST</span> verify that:<a href="#section-5.3-2" class="pilcrow">¶</a></p>
+<ul class="normal">
+<li class="normal" id="section-5.3-3.1">
+            <p id="section-5.3-3.1.1">the transaction token was issued by the authorization server identified by the <code>aud</code> claim of the transaction authorization challenge;<a href="#section-5.3-3.1.1" class="pilcrow">¶</a></p>
+</li>
+          <li class="normal" id="section-5.3-3.2">
+            <p id="section-5.3-3.2.1">the transaction token audience identifies the protected resource, unless an application profile defines a different audience binding;<a href="#section-5.3-3.2.1" class="pilcrow">¶</a></p>
+</li>
+          <li class="normal" id="section-5.3-3.3">
+            <p id="section-5.3-3.3.1">the transaction token has not expired;<a href="#section-5.3-3.3.1" class="pilcrow">¶</a></p>
+</li>
+          <li class="normal" id="section-5.3-3.4">
+            <p id="section-5.3-3.4.1">the transaction token contains the same <code>txn</code> value as the transaction authorization challenge;<a href="#section-5.3-3.4.1" class="pilcrow">¶</a></p>
+</li>
+          <li class="normal" id="section-5.3-3.5">
+            <p id="section-5.3-3.5.1">the transaction token authorizes the requested operation;<a href="#section-5.3-3.5.1" class="pilcrow">¶</a></p>
+</li>
+          <li class="normal" id="section-5.3-3.6">
+            <p id="section-5.3-3.6.1">any requester context required by the transaction authorization challenge is present and matches the challenged transaction;<a href="#section-5.3-3.6.1" class="pilcrow">¶</a></p>
+</li>
+          <li class="normal" id="section-5.3-3.7">
+            <p id="section-5.3-3.7.1">the transaction token has not previously been used, if the protected resource requires single-use transaction tokens.<a href="#section-5.3-3.7.1" class="pilcrow">¶</a></p>
+</li>
+        </ul>
+<p id="section-5.3-4">A protected resource <span class="bcp14">MUST</span> reject a transaction token that does not correspond to the transaction authorization challenge for the requested
+operation.<a href="#section-5.3-4" class="pilcrow">¶</a></p>
+<p id="section-5.3-5">A protected resource <span class="bcp14">SHOULD</span> treat transaction tokens as single-use when the challenged operation is non-idempotent or high impact.
+If single-use semantics are required, the protected resource <span class="bcp14">MUST</span> maintain sufficient state to detect replay of the transaction
+token or transaction identifier.<a href="#section-5.3-5" class="pilcrow">¶</a></p>
+<p id="section-5.3-6">The protected resource <span class="bcp14">MUST NOT</span> accept a transaction token as general authorization for operations other than the challenged operation.<a href="#section-5.3-6" class="pilcrow">¶</a></p>
+</section>
+</div>
 </section>
 </div>
 <div id="security-considerations">
-<section id="section-3">
+<section id="section-6">
       <h2 id="name-security-considerations">
-<a href="#section-3" class="section-number selfRef">3. </a><a href="#name-security-considerations" class="section-name selfRef">Security Considerations</a>
+<a href="#section-6" class="section-number selfRef">6. </a><a href="#name-security-considerations" class="section-name selfRef">Security Considerations</a>
       </h2>
-<p id="section-3-1">TODO Security<a href="#section-3-1" class="pilcrow">¶</a></p>
+<p id="section-6-1">Transaction authorization challenges and transaction tokens are security-sensitive artifacts. A transaction
+authorization challenge requests authorization for a specific operation, and a transaction token represents evidence
+that the challenged operation was authorized. Implementations need to ensure that these artifacts cannot be modified,
+replayed, substituted, or used for a different operation.<a href="#section-6-1" class="pilcrow">¶</a></p>
+<p id="section-6-2">A protected resource <span class="bcp14">MUST</span> sign each transaction authorization challenge using an asymmetric signing key. Clients and
+authorization servers <span class="bcp14">MUST</span> validate the challenge signature before using any claim from the challenge for display,
+policy evaluation, or authorization decisions. If a challenge cannot be validated, it <span class="bcp14">MUST NOT</span> be treated as
+authentic.<a href="#section-6-2" class="pilcrow">¶</a></p>
+<p id="section-6-3">The authorization server <span class="bcp14">MUST</span> verify that the <code>aud</code> claim identifies the authorization server and that the protected
+resource identified by the <code>iss</code> claim is trusted to request transaction authorization for the requested operation. An
+authorization server <span class="bcp14">MUST NOT</span> issue a transaction token for a challenge issued by an unrecognized or unauthorized
+protected resource.<a href="#section-6-3" class="pilcrow">¶</a></p>
+<p id="section-6-4">The transaction authorization challenge and the resulting transaction token <span class="bcp14">MUST</span> be bound to the same transaction
+identifier. The protected resource <span class="bcp14">MUST</span> verify that the <code>txn</code> value in the transaction token matches the <code>txn</code> value
+from the challenge. A transaction token <span class="bcp14">MUST NOT</span> be accepted as authorization for any operation other than the
+challenged operation.<a href="#section-6-4" class="pilcrow">¶</a></p>
+<p id="section-6-5">Transaction tokens can be replayed if they are not sufficiently constrained. Authorization servers <span class="bcp14">MUST</span> issue
+transaction tokens with short lifetimes. Protected resources <span class="bcp14">SHOULD</span> treat transaction tokens as single-use for
+non-idempotent or high-impact operations, and maintain sufficient state to detect replay where single-use semantics
+are required.<a href="#section-6-5" class="pilcrow">¶</a></p>
+<p id="section-6-6">The agent is not trusted to modify or summarize the challenge. Clients and authorization servers <span class="bcp14">MUST NOT</span> rely on an
+unprotected description supplied by the agent as the basis for user display, policy evaluation, or authorization
+decisions. Information presented to the user or approving party <span class="bcp14">SHOULD</span> be derived from the validated challenge, from
+protected resource state identified by the challenge, or from information otherwise authenticated and bound to the
+challenge.<a href="#section-6-6" class="pilcrow">¶</a></p>
+<p id="section-6-7">When requester context is relevant to the authorization decision, the protected resource <span class="bcp14">SHOULD</span> include that context
+in the challenge, for example using the <code>act</code> claim. The authorization server <span class="bcp14">MUST</span> consider requester context when it
+is present. This helps prevent an approval obtained for one agent, client, user, or delegation context from being used
+to authorize a transaction initiated by another requester.<a href="#section-6-7" class="pilcrow">¶</a></p>
+<p id="section-6-8">The client can inspect the challenge before presenting it to the authorization server. This is important because the
+challenge can contain sensitive information about the requested operation, user intent, protected resources, or
+organizational policy. Clients <span class="bcp14">SHOULD</span> allow the user to decline before disclosing the challenge to the authorization
+server when the challenge contains privacy-sensitive transaction details.<a href="#section-6-8" class="pilcrow">¶</a></p>
+<p id="section-6-9">Challenges and transaction tokens can reveal sensitive information if logged or exposed to unintended parties.
+Implementations <span class="bcp14">SHOULD</span> minimize the information included in challenges and transaction tokens, avoid logging them
+unless necessary, and protect them in transit and at rest.<a href="#section-6-9" class="pilcrow">¶</a></p>
+<p id="section-6-10">Application profiles that define additional challenge claims, request binding mechanisms, or alternative audience
+bindings <span class="bcp14">MUST</span> describe how those extensions preserve challenge integrity, prevent replay and substitution, and avoid
+confused-deputy attacks.<a href="#section-6-10" class="pilcrow">¶</a></p>
 </section>
 </div>
 <div id="iana-considerations">
-<section id="section-4">
+<section id="section-7">
       <h2 id="name-iana-considerations">
-<a href="#section-4" class="section-number selfRef">4. </a><a href="#name-iana-considerations" class="section-name selfRef">IANA Considerations</a>
+<a href="#section-7" class="section-number selfRef">7. </a><a href="#name-iana-considerations" class="section-name selfRef">IANA Considerations</a>
       </h2>
-<p id="section-4-1">This document has no IANA actions.<a href="#section-4-1" class="pilcrow">¶</a></p>
+<p id="section-7-1">This document registers the <code>Accept-Txn-Challenge</code> HTTP field name, one
+OAuth error code, one OAuth parameter, and two OAuth Protected Resource
+Metadata parameters.<a href="#section-7-1" class="pilcrow">¶</a></p>
+<div id="http-field-name-registration">
+<section id="section-7.1">
+        <h3 id="name-http-field-name-registratio">
+<a href="#section-7.1" class="section-number selfRef">7.1. </a><a href="#name-http-field-name-registratio" class="section-name selfRef">HTTP Field Name Registration</a>
+        </h3>
+<p id="section-7.1-1">IANA is requested to register the following field name in the "HTTP Field Name" registry <span>[<a href="#IANA.HTTP.FieldNames" class="cite xref">IANA.HTTP.FieldNames</a>]</span> as a structured Header Field:<a href="#section-7.1-1" class="pilcrow">¶</a></p>
+<span class="break"></span><dl class="dlParallel" id="section-7.1-2">
+          <dt id="section-7.1-2.1">Field Name:</dt>
+          <dd style="margin-left: 1.5em" id="section-7.1-2.2">
+            <p id="section-7.1-2.2.1">Accept-Txn-Challenge<a href="#section-7.1-2.2.1" class="pilcrow">¶</a></p>
+</dd>
+          <dd class="break"></dd>
+<dt id="section-7.1-2.3">Status:</dt>
+          <dd style="margin-left: 1.5em" id="section-7.1-2.4">
+            <p id="section-7.1-2.4.1">permanent<a href="#section-7.1-2.4.1" class="pilcrow">¶</a></p>
+</dd>
+          <dd class="break"></dd>
+<dt id="section-7.1-2.5">Structured Type:</dt>
+          <dd style="margin-left: 1.5em" id="section-7.1-2.6">
+            <p id="section-7.1-2.6.1">Item<a href="#section-7.1-2.6.1" class="pilcrow">¶</a></p>
+</dd>
+          <dd class="break"></dd>
+<dt id="section-7.1-2.7">Reference:</dt>
+          <dd style="margin-left: 1.5em" id="section-7.1-2.8">
+            <p id="section-7.1-2.8.1">this document<a href="#section-7.1-2.8.1" class="pilcrow">¶</a></p>
+</dd>
+        <dd class="break"></dd>
+</dl>
 </section>
 </div>
-<div id="sec-normative-references">
-<section id="section-5">
-      <h2 id="name-normative-references">
-<a href="#section-5" class="section-number selfRef">5. </a><a href="#name-normative-references" class="section-name selfRef">Normative References</a>
+<div id="oauth-extensions-error-registration">
+<section id="section-7.2">
+        <h3 id="name-oauth-extensions-error-regi">
+<a href="#section-7.2" class="section-number selfRef">7.2. </a><a href="#name-oauth-extensions-error-regi" class="section-name selfRef">OAuth Extensions Error Registration</a>
+        </h3>
+<p id="section-7.2-1">IANA is requested to register the following error value in the "OAuth Extensions Error" registry <span>[<a href="#IANA.OAuth.Parameters" class="cite xref">IANA.OAuth.Parameters</a>]</span>:<a href="#section-7.2-1" class="pilcrow">¶</a></p>
+<span class="break"></span><dl class="dlParallel" id="section-7.2-2">
+          <dt id="section-7.2-2.1">Error name:</dt>
+          <dd style="margin-left: 1.5em" id="section-7.2-2.2">
+            <p id="section-7.2-2.2.1">transaction_authorization_required<a href="#section-7.2-2.2.1" class="pilcrow">¶</a></p>
+</dd>
+          <dd class="break"></dd>
+<dt id="section-7.2-2.3">Usage location:</dt>
+          <dd style="margin-left: 1.5em" id="section-7.2-2.4">
+            <p id="section-7.2-2.4.1">resource access error response<a href="#section-7.2-2.4.1" class="pilcrow">¶</a></p>
+</dd>
+          <dd class="break"></dd>
+<dt id="section-7.2-2.5">Protocol extension:</dt>
+          <dd style="margin-left: 1.5em" id="section-7.2-2.6">
+            <p id="section-7.2-2.6.1">OAuth Transaction Authorization Challenge<a href="#section-7.2-2.6.1" class="pilcrow">¶</a></p>
+</dd>
+          <dd class="break"></dd>
+<dt id="section-7.2-2.7">Change controller:</dt>
+          <dd style="margin-left: 1.5em" id="section-7.2-2.8">
+            <p id="section-7.2-2.8.1">IETF<a href="#section-7.2-2.8.1" class="pilcrow">¶</a></p>
+</dd>
+          <dd class="break"></dd>
+<dt id="section-7.2-2.9">Reference:</dt>
+          <dd style="margin-left: 1.5em" id="section-7.2-2.10">
+            <p id="section-7.2-2.10.1">this document<a href="#section-7.2-2.10.1" class="pilcrow">¶</a></p>
+</dd>
+        <dd class="break"></dd>
+</dl>
+</section>
+</div>
+<div id="oauth-parameter-registration">
+<section id="section-7.3">
+        <h3 id="name-oauth-parameter-registratio">
+<a href="#section-7.3" class="section-number selfRef">7.3. </a><a href="#name-oauth-parameter-registratio" class="section-name selfRef">OAuth Parameter Registration</a>
+        </h3>
+<p id="section-7.3-1">IANA is requested to register the following parameter in the "OAuth Parameters" registry <span>[<a href="#IANA.OAuth.Parameters" class="cite xref">IANA.OAuth.Parameters</a>]</span>:<a href="#section-7.3-1" class="pilcrow">¶</a></p>
+<span class="break"></span><dl class="dlParallel" id="section-7.3-2">
+          <dt id="section-7.3-2.1">Name:</dt>
+          <dd style="margin-left: 1.5em" id="section-7.3-2.2">
+            <p id="section-7.3-2.2.1">transaction_challenge<a href="#section-7.3-2.2.1" class="pilcrow">¶</a></p>
+</dd>
+          <dd class="break"></dd>
+<dt id="section-7.3-2.3">Parameter Usage Location:</dt>
+          <dd style="margin-left: 1.5em" id="section-7.3-2.4">
+            <p id="section-7.3-2.4.1">rs-client response<a href="#section-7.3-2.4.1" class="pilcrow">¶</a></p>
+</dd>
+          <dd class="break"></dd>
+<dt id="section-7.3-2.5">Change controller:</dt>
+          <dd style="margin-left: 1.5em" id="section-7.3-2.6">
+            <p id="section-7.3-2.6.1">IETF<a href="#section-7.3-2.6.1" class="pilcrow">¶</a></p>
+</dd>
+          <dd class="break"></dd>
+<dt id="section-7.3-2.7">Reference:</dt>
+          <dd style="margin-left: 1.5em" id="section-7.3-2.8">
+            <p id="section-7.3-2.8.1">this document<a href="#section-7.3-2.8.1" class="pilcrow">¶</a></p>
+</dd>
+        <dd class="break"></dd>
+</dl>
+</section>
+</div>
+<div id="oauth-protected-resource-metadata-registration">
+<section id="section-7.4">
+        <h3 id="name-oauth-protected-resource-me">
+<a href="#section-7.4" class="section-number selfRef">7.4. </a><a href="#name-oauth-protected-resource-me" class="section-name selfRef">OAuth Protected Resource Metadata Registration</a>
+        </h3>
+<p id="section-7.4-1">IANA is requested to register the following values in the "OAuth Protected Resource Metadata" registry <span>[<a href="#IANA.OAuth.Parameters" class="cite xref">IANA.OAuth.Parameters</a>]</span>.<a href="#section-7.4-1" class="pilcrow">¶</a></p>
+<span class="break"></span><dl class="dlParallel" id="section-7.4-2">
+          <dt id="section-7.4-2.1">Metadata name:</dt>
+          <dd style="margin-left: 1.5em" id="section-7.4-2.2">
+            <p id="section-7.4-2.2.1">txn_challenge_jwks_uri<a href="#section-7.4-2.2.1" class="pilcrow">¶</a></p>
+</dd>
+          <dd class="break"></dd>
+<dt id="section-7.4-2.3">Metadata description:</dt>
+          <dd style="margin-left: 1.5em" id="section-7.4-2.4">
+            <p id="section-7.4-2.4.1">URL of the protected resource's JSON Web Key Set containing public keys used to validate transaction authorization challenges.<a href="#section-7.4-2.4.1" class="pilcrow">¶</a></p>
+</dd>
+          <dd class="break"></dd>
+<dt id="section-7.4-2.5">Change controller:</dt>
+          <dd style="margin-left: 1.5em" id="section-7.4-2.6">
+            <p id="section-7.4-2.6.1">IETF<a href="#section-7.4-2.6.1" class="pilcrow">¶</a></p>
+</dd>
+          <dd class="break"></dd>
+<dt id="section-7.4-2.7">Reference:</dt>
+          <dd style="margin-left: 1.5em" id="section-7.4-2.8">
+            <p id="section-7.4-2.8.1">this document<a href="#section-7.4-2.8.1" class="pilcrow">¶</a></p>
+</dd>
+          <dd class="break"></dd>
+<dt id="section-7.4-2.9">Metadata name:</dt>
+          <dd style="margin-left: 1.5em" id="section-7.4-2.10">
+            <p id="section-7.4-2.10.1">txn_challenge_signing_alg_values_supported<a href="#section-7.4-2.10.1" class="pilcrow">¶</a></p>
+</dd>
+          <dd class="break"></dd>
+<dt id="section-7.4-2.11">Metadata description:</dt>
+          <dd style="margin-left: 1.5em" id="section-7.4-2.12">
+            <p id="section-7.4-2.12.1">JSON array containing the JWS <code>alg</code> values supported by the protected resource for transaction authorization challenges.<a href="#section-7.4-2.12.1" class="pilcrow">¶</a></p>
+</dd>
+          <dd class="break"></dd>
+<dt id="section-7.4-2.13">Change controller:</dt>
+          <dd style="margin-left: 1.5em" id="section-7.4-2.14">
+            <p id="section-7.4-2.14.1">IETF<a href="#section-7.4-2.14.1" class="pilcrow">¶</a></p>
+</dd>
+          <dd class="break"></dd>
+<dt id="section-7.4-2.15">Reference:</dt>
+          <dd style="margin-left: 1.5em" id="section-7.4-2.16">
+            <p id="section-7.4-2.16.1">this document<a href="#section-7.4-2.16.1" class="pilcrow">¶</a></p>
+</dd>
+        <dd class="break"></dd>
+</dl>
+</section>
+</div>
+<div id="json-web-token-claims-registration">
+<section id="section-7.5">
+        <h3 id="name-json-web-token-claims-regis">
+<a href="#section-7.5" class="section-number selfRef">7.5. </a><a href="#name-json-web-token-claims-regis" class="section-name selfRef">JSON Web Token Claims Registration</a>
+        </h3>
+<p id="section-7.5-1">IANA is requested to register the following claims in the "JSON Web Token Claims" registry <span>[<a href="#IANA.JSON.Web.Token" class="cite xref">IANA.JSON.Web.Token</a>]</span>.<a href="#section-7.5-1" class="pilcrow">¶</a></p>
+<span class="break"></span><dl class="dlParallel" id="section-7.5-2">
+          <dt id="section-7.5-2.1">Claim Name:</dt>
+          <dd style="margin-left: 1.5em" id="section-7.5-2.2">
+            <p id="section-7.5-2.2.1">reason<a href="#section-7.5-2.2.1" class="pilcrow">¶</a></p>
+</dd>
+          <dd class="break"></dd>
+<dt id="section-7.5-2.3">Claim Description:</dt>
+          <dd style="margin-left: 1.5em" id="section-7.5-2.4">
+            <p id="section-7.5-2.4.1">Human-readable explanation of why authorization, confirmation, or other processing is required.<a href="#section-7.5-2.4.1" class="pilcrow">¶</a></p>
+</dd>
+          <dd class="break"></dd>
+<dt id="section-7.5-2.5">Change Controller:</dt>
+          <dd style="margin-left: 1.5em" id="section-7.5-2.6">
+            <p id="section-7.5-2.6.1">IETF<a href="#section-7.5-2.6.1" class="pilcrow">¶</a></p>
+</dd>
+          <dd class="break"></dd>
+<dt id="section-7.5-2.7">Reference:</dt>
+          <dd style="margin-left: 1.5em" id="section-7.5-2.8">
+            <p id="section-7.5-2.8.1">this document<a href="#section-7.5-2.8.1" class="pilcrow">¶</a></p>
+</dd>
+          <dd class="break"></dd>
+<dt id="section-7.5-2.9">Claim Name:</dt>
+          <dd style="margin-left: 1.5em" id="section-7.5-2.10">
+            <p id="section-7.5-2.10.1">reason_uri<a href="#section-7.5-2.10.1" class="pilcrow">¶</a></p>
+</dd>
+          <dd class="break"></dd>
+<dt id="section-7.5-2.11">Claim Description:</dt>
+          <dd style="margin-left: 1.5em" id="section-7.5-2.12">
+            <p id="section-7.5-2.12.1">URI identifying additional information about why authorization, confirmation, or other processing is required.<a href="#section-7.5-2.12.1" class="pilcrow">¶</a></p>
+</dd>
+          <dd class="break"></dd>
+<dt id="section-7.5-2.13">Change Controller:</dt>
+          <dd style="margin-left: 1.5em" id="section-7.5-2.14">
+            <p id="section-7.5-2.14.1">IETF<a href="#section-7.5-2.14.1" class="pilcrow">¶</a></p>
+</dd>
+          <dd class="break"></dd>
+<dt id="section-7.5-2.15">Reference:</dt>
+          <dd style="margin-left: 1.5em" id="section-7.5-2.16">
+            <p id="section-7.5-2.16.1">this document<a href="#section-7.5-2.16.1" class="pilcrow">¶</a></p>
+</dd>
+        <dd class="break"></dd>
+</dl>
+</section>
+</div>
+</section>
+</div>
+<div id="sec-combined-references">
+<section id="section-8">
+      <h2 id="name-references">
+<a href="#section-8" class="section-number selfRef">8. </a><a href="#name-references" class="section-name selfRef">References</a>
       </h2>
+<div id="sec-normative-references">
+<section id="section-8.1">
+        <h3 id="name-normative-references">
+<a href="#section-8.1" class="section-number selfRef">8.1. </a><a href="#name-normative-references" class="section-name selfRef">Normative References</a>
+        </h3>
 <dl class="references">
+<dt id="JWS">[JWS]</dt>
+        <dd>
+<span class="refAuthor">Jones, M.</span>, <span class="refAuthor">Bradley, J.</span>, and <span class="refAuthor">N. Sakimura</span>, <span class="refTitle">"JSON Web Signature (JWS)"</span>, <span class="seriesInfo">RFC 7515</span>, <span class="seriesInfo">DOI 10.17487/RFC7515</span>, <time datetime="2015-05" class="refDate">May 2015</time>, <span>&lt;<a href="https://www.rfc-editor.org/rfc/rfc7515">https://www.rfc-editor.org/rfc/rfc7515</a>&gt;</span>. </dd>
+<dd class="break"></dd>
+<dt id="JWT">[JWT]</dt>
+        <dd>
+<span class="refAuthor">Jones, M.</span>, <span class="refAuthor">Bradley, J.</span>, and <span class="refAuthor">N. Sakimura</span>, <span class="refTitle">"JSON Web Token (JWT)"</span>, <span class="seriesInfo">RFC 7519</span>, <span class="seriesInfo">DOI 10.17487/RFC7519</span>, <time datetime="2015-05" class="refDate">May 2015</time>, <span>&lt;<a href="https://www.rfc-editor.org/rfc/rfc7519">https://www.rfc-editor.org/rfc/rfc7519</a>&gt;</span>. </dd>
+<dd class="break"></dd>
+<dt id="OAUTH-FRAMEWORK">[OAUTH-FRAMEWORK]</dt>
+        <dd>
+<span class="refAuthor">Hardt, D.</span>, <span class="refTitle">"The OAuth 2.0 Authorization Framework"</span>, <span class="refContent">Work in Progress</span>, <span class="seriesInfo">Internet-Draft, draft-ietf-oauth-v2-31</span>, <time datetime="2012-08-01" class="refDate">1 August 2012</time>, <span>&lt;<a href="https://datatracker.ietf.org/doc/html/draft-ietf-oauth-v2-31">https://datatracker.ietf.org/doc/html/draft-ietf-oauth-v2-31</a>&gt;</span>. </dd>
+<dd class="break"></dd>
+<dt id="OAUTH-PROT-METADATA">[OAUTH-PROT-METADATA]</dt>
+        <dd>
+<span class="refAuthor">Jones, M.B.</span>, <span class="refAuthor">Hunt, P.</span>, and <span class="refAuthor">A. Parecki</span>, <span class="refTitle">"OAuth 2.0 Protected Resource Metadata"</span>, <span class="seriesInfo">RFC 9728</span>, <span class="seriesInfo">DOI 10.17487/RFC9728</span>, <time datetime="2025-04" class="refDate">April 2025</time>, <span>&lt;<a href="https://www.rfc-editor.org/rfc/rfc9728">https://www.rfc-editor.org/rfc/rfc9728</a>&gt;</span>. </dd>
+<dd class="break"></dd>
+<dt id="OAUTH-RAR">[OAUTH-RAR]</dt>
+        <dd>
+<span class="refAuthor">Lodderstedt, T.</span>, <span class="refAuthor">Richer, J.</span>, and <span class="refAuthor">B. Campbell</span>, <span class="refTitle">"OAuth 2.0 Rich Authorization Requests"</span>, <span class="seriesInfo">RFC 9396</span>, <span class="seriesInfo">DOI 10.17487/RFC9396</span>, <time datetime="2023-05" class="refDate">May 2023</time>, <span>&lt;<a href="https://www.rfc-editor.org/rfc/rfc9396">https://www.rfc-editor.org/rfc/rfc9396</a>&gt;</span>. </dd>
+<dd class="break"></dd>
+<dt id="OAUTH-TOKEN-EXCHANGE">[OAUTH-TOKEN-EXCHANGE]</dt>
+        <dd>
+<span class="refAuthor">Jones, M.</span>, <span class="refAuthor">Nadalin, A.</span>, <span class="refAuthor">Campbell, B., Ed.</span>, <span class="refAuthor">Bradley, J.</span>, and <span class="refAuthor">C. Mortimore</span>, <span class="refTitle">"OAuth 2.0 Token Exchange"</span>, <span class="seriesInfo">RFC 8693</span>, <span class="seriesInfo">DOI 10.17487/RFC8693</span>, <time datetime="2020-01" class="refDate">January 2020</time>, <span>&lt;<a href="https://www.rfc-editor.org/rfc/rfc8693">https://www.rfc-editor.org/rfc/rfc8693</a>&gt;</span>. </dd>
+<dd class="break"></dd>
 <dt id="RFC2119">[RFC2119]</dt>
-      <dd>
+        <dd>
 <span class="refAuthor">Bradner, S.</span>, <span class="refTitle">"Key words for use in RFCs to Indicate Requirement Levels"</span>, <span class="seriesInfo">BCP 14</span>, <span class="seriesInfo">RFC 2119</span>, <span class="seriesInfo">DOI 10.17487/RFC2119</span>, <time datetime="1997-03" class="refDate">March 1997</time>, <span>&lt;<a href="https://www.rfc-editor.org/rfc/rfc2119">https://www.rfc-editor.org/rfc/rfc2119</a>&gt;</span>. </dd>
 <dd class="break"></dd>
 <dt id="RFC8174">[RFC8174]</dt>
-    <dd>
+        <dd>
 <span class="refAuthor">Leiba, B.</span>, <span class="refTitle">"Ambiguity of Uppercase vs Lowercase in RFC 2119 Key Words"</span>, <span class="seriesInfo">BCP 14</span>, <span class="seriesInfo">RFC 8174</span>, <span class="seriesInfo">DOI 10.17487/RFC8174</span>, <time datetime="2017-05" class="refDate">May 2017</time>, <span>&lt;<a href="https://www.rfc-editor.org/rfc/rfc8174">https://www.rfc-editor.org/rfc/rfc8174</a>&gt;</span>. </dd>
 <dd class="break"></dd>
+<dt id="SET">[SET]</dt>
+        <dd>
+<span class="refAuthor">Hunt, P., Ed.</span>, <span class="refAuthor">Jones, M.</span>, <span class="refAuthor">Denniss, W.</span>, and <span class="refAuthor">M. Ansari</span>, <span class="refTitle">"Security Event Token (SET)"</span>, <span class="seriesInfo">RFC 8417</span>, <span class="seriesInfo">DOI 10.17487/RFC8417</span>, <time datetime="2018-07" class="refDate">July 2018</time>, <span>&lt;<a href="https://www.rfc-editor.org/rfc/rfc8417">https://www.rfc-editor.org/rfc/rfc8417</a>&gt;</span>. </dd>
+<dd class="break"></dd>
+<dt id="STRUCTURED-FIELDS">[STRUCTURED-FIELDS]</dt>
+        <dd>
+<span class="refAuthor">Nottingham, M.</span> and <span class="refAuthor">P. Kamp</span>, <span class="refTitle">"Structured Field Values for HTTP"</span>, <span class="seriesInfo">RFC 9651</span>, <span class="seriesInfo">DOI 10.17487/RFC9651</span>, <time datetime="2024-09" class="refDate">September 2024</time>, <span>&lt;<a href="https://www.rfc-editor.org/rfc/rfc9651">https://www.rfc-editor.org/rfc/rfc9651</a>&gt;</span>. </dd>
+<dd class="break"></dd>
+<dt id="TXN-TOKENS">[TXN-TOKENS]</dt>
+      <dd>
+<span class="refAuthor">Tulshibagwale, A.</span>, <span class="refAuthor">Fletcher, G.</span>, and <span class="refAuthor">P. Kasselman</span>, <span class="refTitle">"Transaction Tokens"</span>, <span class="refContent">Work in Progress</span>, <span class="seriesInfo">Internet-Draft, draft-ietf-oauth-transaction-tokens-08</span>, <time datetime="2026-03-02" class="refDate">2 March 2026</time>, <span>&lt;<a href="https://datatracker.ietf.org/doc/html/draft-ietf-oauth-transaction-tokens-08">https://datatracker.ietf.org/doc/html/draft-ietf-oauth-transaction-tokens-08</a>&gt;</span>. </dd>
+<dd class="break"></dd>
 </dl>
+</section>
+</div>
+<div id="sec-informative-references">
+<section id="section-8.2">
+        <h3 id="name-informative-references">
+<a href="#section-8.2" class="section-number selfRef">8.2. </a><a href="#name-informative-references" class="section-name selfRef">Informative References</a>
+        </h3>
+<dl class="references">
+<dt id="IANA.HTTP.FieldNames">[IANA.HTTP.FieldNames]</dt>
+        <dd>
+<span class="refTitle">"Hypertext Transfer Protocol (HTTP) Field Name Registry"</span>, <span>n.d.</span>, <span>&lt;<a href="https://www.iana.org/assignments/http-fields/">https://www.iana.org/assignments/http-fields/</a>&gt;</span>. </dd>
+<dd class="break"></dd>
+<dt id="IANA.JSON.Web.Token">[IANA.JSON.Web.Token]</dt>
+        <dd>
+<span class="refTitle">"JSON Web Token (JWT)"</span>, <span>n.d.</span>, <span>&lt;<a href="https://www.iana.org/assignments/jwt/">https://www.iana.org/assignments/jwt/</a>&gt;</span>. </dd>
+<dd class="break"></dd>
+<dt id="IANA.OAuth.Parameters">[IANA.OAuth.Parameters]</dt>
+        <dd>
+<span class="refTitle">"OAuth Parameters"</span>, <span>n.d.</span>, <span>&lt;<a href="https://www.iana.org/assignments/oauth-parameters/">https://www.iana.org/assignments/oauth-parameters/</a>&gt;</span>. </dd>
+<dd class="break"></dd>
+<dt id="OAUTH-STEP-UP">[OAUTH-STEP-UP]</dt>
+      <dd>
+<span class="refAuthor">Bertocci, V.</span> and <span class="refAuthor">B. Campbell</span>, <span class="refTitle">"OAuth 2.0 Step Up Authentication Challenge Protocol"</span>, <span class="seriesInfo">RFC 9470</span>, <span class="seriesInfo">DOI 10.17487/RFC9470</span>, <time datetime="2023-09" class="refDate">September 2023</time>, <span>&lt;<a href="https://www.rfc-editor.org/rfc/rfc9470">https://www.rfc-editor.org/rfc/rfc9470</a>&gt;</span>. </dd>
+<dd class="break"></dd>
+</dl>
+</section>
+</div>
 </section>
 </div>
 <div id="acknowledgments">
