@@ -4,8 +4,8 @@
 
 Web Authorization Protocol                                  Y. Rosomakho
 Internet-Draft                                                   Zscaler
-Intended status: Standards Track                              2 May 2026
-Expires: 3 November 2026
+Intended status: Standards Track                              3 May 2026
+Expires: 4 November 2026
 
 
                OAuth Transaction Authorization Challenge
@@ -58,7 +58,7 @@ Status of This Memo
    time.  It is inappropriate to use Internet-Drafts as reference
    material or to cite them other than as "work in progress."
 
-   This Internet-Draft will expire on 3 November 2026.
+   This Internet-Draft will expire on 4 November 2026.
 
 Copyright Notice
 
@@ -88,22 +88,28 @@ Table of Contents
        4.2.1.  Challenge Representation
        4.2.2.  Challenge Claims
      4.3.  Challenge Signing and Key Discovery
-     4.4.  Client Processing
-     4.5.  Authorization Server Processing
-   5.  Transaction Token
-     5.1.  Token Issuance
-     5.2.  Token Presentation
-     5.3.  Protected Resource Validation
-   6.  Security Considerations
-   7.  IANA Considerations
-     7.1.  HTTP Field Name Registration
-     7.2.  OAuth Extensions Error Registration
-     7.3.  OAuth Parameter Registration
-     7.4.  OAuth Protected Resource Metadata Registration
-     7.5.   JSON Web Token Claims Registration
-   8.  References
-     8.1.  Normative References
-     8.2.  Informative References
+     4.4.  Agent Relay
+     4.5.  Client Processing
+     4.6.  Authorization Server Processing
+   5.  Transaction Authorization Flow
+     5.1.  Transaction Authorization Request
+     5.2.  Transaction Authorization Response
+     5.3.  Pending and Polling
+     5.4.  Successful Transaction Token Response
+   6.  Transaction Token
+     6.1.  Token Presentation
+     6.2.  Protected Resource Validation
+   7.  Security Considerations
+   8.  IANA Considerations
+     8.1.  HTTP Field Name Registration
+     8.2.  OAuth Extensions Error Registration
+     8.3.  OAuth Parameter Registration
+     8.4.  OAuth Protected Resource Metadata Registration
+     8.5.  OAuth Authorization Server Metadata Registration
+     8.6.   JSON Web Token Claims Registration
+   9.  References
+     9.1.  Normative References
+     9.2.  Informative References
    Acknowledgments
    Author's Address
 
@@ -441,9 +447,9 @@ WWW-Authenticate: Bearer error="transaction_authorization_required",
       within the context of the protected resource for the lifetime of
       the challenge and any transaction token issued in response to it.
 
-   authorization_details:  Authorization Details claim as defined in
-      [OAUTH-RAR].  Structured description of the operation for which
-      transaction-specific authorization is requested.
+   authorization_details:  Claim containing Authorization Details as
+      defined in [OAUTH-RAR].  Structured description of the operation
+      for which transaction-specific authorization is requested.
 
    reason:  Human-readable explanation of why transaction-specific
       authorization is required.  This value is intended for display to
@@ -551,12 +557,43 @@ WWW-Authenticate: Bearer error="transaction_authorization_required",
    If the challenge cannot be validated, the client or authorization
    server MUST NOT treat the challenge as authentic.
 
-4.4.  Client Processing
+4.4.  Agent Relay
 
-   The client MUST verify that the aud claim identifies the
+   After receiving a transaction authorization challenge from a
+   protected resource, the agent relays the challenge to the client
+   using a deployment-specific client-agent protocol.
+
+   The agent MUST relay the transaction authorization challenge without
+   modifying it and MUST NOT replace it with an agent-generated
+   description of the requested operation.  The client MUST treat any
+   agent-supplied description as advisory.  Any authorization decision,
+   user display, or disclosure decision MUST be based on the validated
+   challenge or on protected resource state identified by the validated
+   challenge.
+
+   A client-agent protocol that carries transaction authorization
+   challenges SHOULD distinguish a transaction authorization challenge
+   from ordinary agent messages or natural-language content.  For
+   example, such a protocol can carry the challenge using a field named
+   transaction_challenge whose value is the JWS Compact Serialization of
+   the transaction authorization challenge.
+
+   In deployments where one agent delegates work to another agent, a
+   transaction authorization challenge MAY be relayed through one or
+   more intermediate agents before reaching the client.  Each agent that
+   relays the challenge MUST relay it without modification.  An
+   intermediate agent MUST NOT replace the challenge with a new
+   challenge unless it is itself acting as a protected resource for a
+   distinct operation and generates a new signed transaction
+   authorization challenge for that operation.
+
+4.5.  Client Processing
+
+   Before presenting the challenge to the authorization server, the
+   client MUST validate the challenge signature, issuer, audience, and
+   expiration.  The client MUST verify that the aud claim identifies the
    authorization server to which the client intends to present the
-   challenge.  The client MUST NOT modify the challenge before
-   presenting it to the authorization server.
+   challenge.
 
    The client MAY display the challenge contents to the user before
    sending the challenge to the authorization server.  This allows the
@@ -572,10 +609,11 @@ WWW-Authenticate: Bearer error="transaction_authorization_required",
    the challenge, the client MUST NOT present the challenge to the
    authorization server.
 
-4.5.  Authorization Server Processing
+4.6.  Authorization Server Processing
 
    The authorization server MUST validate the transaction authorization
-   challenge before issuing a transaction token.
+   challenge before accepting it for processing or issuing a transaction
+   token.
 
    At a minimum, the authorization server MUST verify that:
 
@@ -597,9 +635,9 @@ WWW-Authenticate: Bearer error="transaction_authorization_required",
       audience, unless an application profile defines a different
       audience binding;
 
-   *  the transaction identifier is present and acceptable;
+   *  the txn claim is present, is a string, and is acceptable;
 
-   *  the requested operation is sufficiently described; and
+   *  the requested operation is sufficiently described;
 
    *  the client is permitted to request transaction authorization for
       the challenged operation.
@@ -620,35 +658,310 @@ WWW-Authenticate: Bearer error="transaction_authorization_required",
    on an unprotected description supplied by the agent as the basis for
    the authorization decision.
 
-   If the authorization server approves the challenge, it issues a
-   transaction token as described in Section 5.  If the authorization
-   server rejects the challenge, cannot validate the challenge, or
-   cannot obtain the required approval, it MUST NOT issue a transaction
-   token for the challenged operation.
+   If the authorization server accepts the challenge for processing, the
+   client obtains the result using the transaction authorization flow
+   described in Section 5.  If the authorization server rejects the
+   challenge, cannot validate the challenge, or cannot obtain the
+   required approval, it MUST NOT issue a transaction token for the
+   challenged operation.
 
-5.  Transaction Token
+5.  Transaction Authorization Flow
+
+   The approval required to satisfy a transaction authorization
+   challenge can require interaction with a human user, resource owner,
+   organizational workflow, or policy authority.  Such interaction can
+   take longer than a single HTTP request-response exchange.  Therefore,
+   this document defines an asynchronous polling flow based on the style
+   of the OAuth 2.0 Device Authorization Grant defined in
+   [OAUTH-DEVICE].
+
+   Unlike the Device Authorization Grant, this flow does not use a
+   device code, user code, or verification URI.  Instead, the client
+   submits a signed transaction authorization challenge to the
+   authorization server.  If the authorization server accepts the
+   challenge for processing, it returns a transaction authorization
+   identifier.  The client then polls the transaction authorization
+   endpoint with that identifier until the authorization server returns
+   a transaction token or an error.
+
+   A successful transaction authorization response does not indicate
+   that the challenged operation has been approved.  It only indicates
+   that the authorization server has accepted the transaction
+   authorization challenge for processing.  The challenged operation is
+   authorized only when the authorization server issues a transaction
+   token and the protected resource accepts that token for the
+   challenged operation.
+
+   The following figure shows the transaction authorization flow:
+
++--------+                         +----------------------+    +-----------------+
+| Client |                         | Authorization Server |    | Approving Party |
++--------+                         +----------------------+    +-----------------+
+    |                                         |                         |
+    | Transaction Authorization Request       |                         |
+    | transaction_challenge                   |                         |
+    |---------------------------------------->|                         |
+    |                                         |                         |
+    |      Transaction Authorization Response |                         |
+    |  transaction_authorization_id, interval |                         |
+    |<----------------------------------------|                         |
+    |                                         |                         |
+    |                                         | Approval Request        |
+    |                                         |------------------------>|
+    |                                         |                         |
+    | Transaction Authorization Poll          |                         |
+    | transaction_authorization_id            |                         |
+    |---------------------------------------->|                         |
+    |                                         |                         |
+    |       authorization_pending / slow_down |                         |
+    |<----------------------------------------|                         |
+    |                                         |                         |
+    |                                         |         Approval Result |
+    |                                         |<------------------------|
+    |                                         |                         |
+    | Transaction Authorization Poll          |                         |
+    | transaction_authorization_id            |                         |
+    |---------------------------------------->|                         |
+    |                                         |                         |
+    |      Transaction Authorization Response |                         |
+    |                       transaction token |                         |
+    |<----------------------------------------|                         |
+    |                                         |                         |
+
+               Figure 5: Transaction authorization flow
+
+5.1.  Transaction Authorization Request
+
+   This specification defines a new OAuth endpoint: the transaction
+   authorization endpoint.  The authorization server MUST publish the
+   location of the transaction authorization endpoint using the
+   transaction_authorization_endpoint authorization server metadata
+   parameter defined by this document.
+
+   The client makes a transaction authorization request to the
+   transaction authorization endpoint by sending a POST request with the
+   following parameters using the application/x-www-form-urlencoded
+   format with a character encoding of UTF-8 in the HTTP request entity-
+   body:
+
+   client_id:  REQUIRED if the client is not authenticating with the
+      authorization server as described in Section 3.2.1 of
+      [OAUTH-FRAMEWORK].  The client identifier issued to the client
+      during the registration process.
+
+   transaction_challenge:  REQUIRED.  The transaction authorization
+      challenge received from the protected resource.
+
+   For example, the client makes the following HTTPS request:
+
+POST /txn-authorization HTTP/1.1
+Host: as.example.com
+Content-Type: application/x-www-form-urlencoded
+
+client_id=s6BhdRkqt3
+&transaction_challenge=eyJhbGciOiJFUzI1NiIsInR5cCI6InR4bi1hdXRoei1jaGFsbGVuZ2Urand0...
+
+             Figure 6: Transaction authorization request
+
+   Requests to the transaction authorization endpoint MUST use the
+   Transport Layer Security (TLS) protocol [TLS] and implement the best
+   practices of [BCP-195].
+
+   The client authentication requirements of Section 3.2.1 of
+   [OAUTH-FRAMEWORK] apply to requests on this endpoint, which means
+   that confidential clients (those that have established client
+   credentials) authenticate in the same manner as when making requests
+   to the token endpoint, and public clients provide the "client_id"
+   parameter to identify themselves.
+
+   The authorization server MUST validate the transaction authorization
+   challenge as described in Section 4.6 before accepting the request
+   for processing.
+
+5.2.  Transaction Authorization Response
+
+   After receiving a transaction authorization request, the
+   authorization server validates the transaction authorization
+   challenge as described in Section 4.6.  The authorization server then
+   either issues a transaction token, indicates that the transaction
+   authorization request is pending, or returns an error response.
+
+   If the authorization server approves the challenged operation without
+   additional interaction, it returns a transaction token response as
+   described in Section 5.4.
+
+   If additional interaction or policy evaluation is required, the
+   authorization server returns an HTTP 200 response with an
+   application/json body containing the following parameters:
+
+   transaction_authorization_id:  REQUIRED.  A server-generated
+      identifier used by the client to continue or poll the transaction
+      authorization request.
+
+   expires_in:  REQUIRED.  Lifetime in seconds of the transaction
+      authorization request.
+
+   interval:  OPTIONAL.  Minimum amount of time in seconds that the
+      client SHOULD wait between polling requests.  If omitted, the
+      client SHOULD use 5 seconds.
+
+   authorization_uri:  OPTIONAL.  URI that the client can present to the
+      user or open in a user agent to continue the authorization
+      interaction.  This URI is used when the authorization server
+      requires an interactive approval or authentication step.
+
+   The authorization server MUST bind the transaction_authorization_id
+   to the client that initiated the transaction authorization request.
+
+   A successful response containing transaction_authorization_id does
+   not indicate that the challenged operation has been approved.  It
+   only indicates that the authorization server has accepted the
+   transaction authorization request for processing.
+
+   For example:
+
+   HTTP/1.1 200 OK
+   Content-Type: application/json
+   Cache-Control: no-store
+
+   {
+     "transaction_authorization_id": "txn-authz-abc123",
+     "expires_in": 300,
+     "interval": 5
+   }
+
+            Figure 7: Transaction authorization pending response
+
+   The following example includes an authorization_uri for an
+   authorization interaction:
+
+HTTP/1.1 200 OK
+Content-Type: application/json
+Cache-Control: no-store
+
+{
+  "transaction_authorization_id": "txn-authz-abc123",
+  "authorization_uri": "https://as.example.com/txn-authorization/txn-authz-abc123",
+  "expires_in": 300,
+  "interval": 5
+}
+
+       Figure 8: Transaction authorization interaction response
+
+5.3.  Pending and Polling
+
+   If the authorization server returns a transaction_authorization_id,
+   the client continues the transaction authorization request by polling
+   the transaction authorization endpoint.
+
+   The client polls by sending a POST request with the following
+   parameters using the application/x-www-form-urlencoded format with a
+   character encoding of UTF-8 in the HTTP request entity-body:
+
+   client_id:  REQUIRED if the client is not authenticating with the
+      authorization server as described in Section 3.2.1 of
+      [OAUTH-FRAMEWORK].  The client identifier issued to the client
+      during the registration process.
+
+   transaction_authorization_id:  REQUIRED.  The transaction
+      authorization identifier returned by the authorization server.
+
+   For example:
+
+   POST /txn-authorization HTTP/1.1
+   Host: as.example.com
+   Content-Type: application/x-www-form-urlencoded
+
+   client_id=s6BhdRkqt3
+   &transaction_authorization_id=txn-authz-abc123
+
+           Figure 9: Polling a transaction authorization request
+
+   The client MUST wait at least the number of seconds specified by the
+   interval parameter before polling again.  If no interval value was
+   provided, the client MUST wait at least 5 seconds between polling
+   requests.
+
+   The authorization server MUST ensure that the client polling the
+   transaction authorization endpoint is the same client that initiated
+   the transaction authorization request, or is otherwise authorized to
+   obtain the result.
+
+   If the transaction authorization request is still pending, the
+   authorization server returns an error response with the
+   authorization_pending error code, as defined in Section 3.5 of
+   [OAUTH-DEVICE].
+
+   For example:
+
+   HTTP/1.1 400 Bad Request
+   Content-Type: application/json
+   Cache-Control: no-store
+
+   {
+     "error": "authorization_pending"
+   }
+
+           Figure 10: Transaction authorization pending response
+
+   The authorization server MAY return an error response with the
+   slow_down error code, as defined in Section 3.5 of [OAUTH-DEVICE], to
+   instruct the client to increase the polling interval.  After
+   receiving slow_down, the client MUST increase the polling interval by
+   at least 5 seconds.
+
+   On encountering a connection timeout, clients MUST unilaterally
+   reduce their polling frequency before retrying.  The use of an
+   exponential backoff algorithm to achieve this, such as doubling the
+   polling interval on each such connection timeout, is RECOMMENDED.
+
+   If the transaction authorization request is approved, the
+   authorization server returns a transaction token response as
+   described in Section 5.4.
+
+   If the approving party denies the request, the authorization server
+   returns an error response with the access_denied error code.  If the
+   transaction authorization request has expired, the authorization
+   server returns an error response with the expired_token error code,
+   as defined in Section 3.5 of [OAUTH-DEVICE].
+
+5.4.  Successful Transaction Token Response
+
+   If the transaction authorization request is approved, the
+   authorization server returns a transaction token response.
+
+   The transaction token response uses the response format defined by
+   [TXN-TOKENS].  The transaction token MUST contain the txn value from
+   the transaction authorization challenge.  The transaction token MUST
+   use the iss value from the transaction authorization challenge as its
+   audience unless an application profile defines a different audience
+   binding.
+
+   For example:
+
+   HTTP/1.1 200 OK
+   Content-Type: application/json
+   Cache-Control: no-store
+
+   {
+     "access_token": "eyJhbGciOiJFUzI1NiIsInR4bnRva2VuK2p3dCJ9...",
+     "issued_token_type": "urn:ietf:params:oauth:token-type:txn_token",
+     "token_type": "N_A"
+   }
+
+              Figure 11: Successful transaction token response
+
+6.  Transaction Token
 
    A transaction token issued in response to a transaction authorization
-   challenge represents authorization for the challenged operation.  The
-   transaction token is issued by the authorization server identified by
-   the aud claim of the transaction authorization challenge and is
-   presented to the protected resource that issued the challenge.
-
+   challenge represents authorization for the challenged operation.
    This document profiles the transaction token defined in [TXN-TOKENS]
    for use as evidence of transaction-specific authorization.
 
-5.1.  Token Issuance
-
-   If the authorization server approves a transaction authorization
-   challenge, it issues a transaction token to the client.  The
-   authorization server MUST NOT issue a transaction token unless it has
-   successfully validated the challenge and obtained any required
-   approval.
-
-   The transaction token MUST contain the txn claim from the transaction
-   authorization challenge.  The transaction token MUST use the iss
-   value from the transaction authorization challenge as its audience
-   unless an application profile defines a different audience binding.
+   The transaction token is issued by the authorization server
+   identified by the aud claim of the transaction authorization
+   challenge and is presented to the protected resource that issued the
+   challenge.
 
    The transaction token MUST contain sufficient information for the
    protected resource to determine that the token authorizes the
@@ -665,13 +978,21 @@ WWW-Authenticate: Bearer error="transaction_authorization_required",
    When requester context, such as the act claim, is present in the
    transaction authorization challenge, the authorization server MUST
    include equivalent requester context in the transaction token or
-   otherwise bind the token to that context.
+   otherwise bind the transaction token to that context.
 
-5.2.  Token Presentation
+6.1.  Token Presentation
 
    The client provides the transaction token to the agent.  The agent
    presents the transaction token to the protected resource together
    with the request for the challenged operation.
+
+   In deployments where one agent delegates work to another agent, the
+   transaction token MAY be relayed through one or more intermediate
+   agents before being presented to the protected resource.  Each agent
+   that relays the transaction token MUST relay it without modification.
+   An agent MUST NOT use the transaction token for a different
+   transaction, different protected resource, or different requester
+   context.
 
    When HTTP is used, the transaction token MUST be presented using the
    Txn-Token header field defined by [TXN-TOKENS].
@@ -690,13 +1011,13 @@ WWW-Authenticate: Bearer error="transaction_authorization_required",
      "recipient": "Example Ltd"
    }
 
-      Figure 5: Presenting a transaction token to a protected resource
+     Figure 12: Presenting a transaction token to a protected resource
 
    The agent MUST NOT modify the transaction token.  If the agent cannot
    present the transaction token to the protected resource, the
    challenged operation cannot be completed using this mechanism.
 
-5.3.  Protected Resource Validation
+6.2.  Protected Resource Validation
 
    Before accepting a transaction token as authorization for a
    challenged operation, the protected resource MUST validate the
@@ -739,7 +1060,7 @@ WWW-Authenticate: Bearer error="transaction_authorization_required",
    The protected resource MUST NOT accept a transaction token as general
    authorization for operations other than the challenged operation.
 
-6.  Security Considerations
+7.  Security Considerations
 
    Transaction authorization challenges and transaction tokens are
    security-sensitive artifacts.  A transaction authorization challenge
@@ -812,13 +1133,14 @@ WWW-Authenticate: Bearer error="transaction_authorization_required",
    how those extensions preserve challenge integrity, prevent replay and
    substitution, and avoid confused-deputy attacks.
 
-7.  IANA Considerations
+8.  IANA Considerations
 
    This document registers the Accept-Txn-Challenge HTTP field name, one
-   OAuth error code, one OAuth parameter, and two OAuth Protected
-   Resource Metadata parameters.
+   OAuth error code, two OAuth parameters, two OAuth Protected Resource
+   Metadata parameters, one OAuth Authorization Server Metadata
+   Parameter and two JWT claims.
 
-7.1.  HTTP Field Name Registration
+8.1.  HTTP Field Name Registration
 
    IANA is requested to register the following field name in the "HTTP
    Field Name" registry [IANA.HTTP.FieldNames] as a structured Header
@@ -832,7 +1154,7 @@ WWW-Authenticate: Bearer error="transaction_authorization_required",
 
    Reference:  this document
 
-7.2.  OAuth Extensions Error Registration
+8.2.  OAuth Extensions Error Registration
 
    IANA is requested to register the following error value in the "OAuth
    Extensions Error" registry [IANA.OAuth.Parameters]:
@@ -847,20 +1169,30 @@ WWW-Authenticate: Bearer error="transaction_authorization_required",
 
    Reference:  this document
 
-7.3.  OAuth Parameter Registration
+8.3.  OAuth Parameter Registration
 
-   IANA is requested to register the following parameter in the "OAuth
+   IANA is requested to register the following parameters in the "OAuth
    Parameters" registry [IANA.OAuth.Parameters]:
 
    Name:  transaction_challenge
 
-   Parameter Usage Location:  rs-client response
+   Parameter Usage Location:  rs-client response, transaction
+      authorization request
 
    Change controller:  IETF
 
    Reference:  this document
 
-7.4.  OAuth Protected Resource Metadata Registration
+   Name:  transaction_authorization_id
+
+   Parameter Usage Location:  transaction authorization request,
+      transaction authorization response
+
+   Change controller:  IETF
+
+   Reference:  this document
+
+8.4.  OAuth Protected Resource Metadata Registration
 
    IANA is requested to register the following values in the "OAuth
    Protected Resource Metadata" registry [IANA.OAuth.Parameters].
@@ -885,7 +1217,21 @@ WWW-Authenticate: Bearer error="transaction_authorization_required",
 
    Reference:  this document
 
-7.5.   JSON Web Token Claims Registration
+8.5.  OAuth Authorization Server Metadata Registration
+
+   IANA is requested to register the following value in the "OAuth
+   Authorization Server Metadata" registry [IANA.OAuth.Parameters].
+
+   Metadata name:  transaction_authorization_endpoint
+
+   Metadata description:  URL of the authorization server endpoint to
+      which clients submit transaction authorization challenges.
+
+   Change controller:  IETF
+
+   Reference:  this document
+
+8.6.   JSON Web Token Claims Registration
 
    IANA is requested to register the following claims in the "JSON Web
    Token Claims" registry [IANA.JSON.Web.Token].
@@ -908,9 +1254,15 @@ WWW-Authenticate: Bearer error="transaction_authorization_required",
 
    Reference:  this document
 
-8.  References
+9.  References
 
-8.1.  Normative References
+9.1.  Normative References
+
+   [BCP-195]  Sheffer, Y., Holz, R., and P. Saint-Andre,
+              "Recommendations for Secure Use of Transport Layer
+              Security (TLS) and Datagram Transport Layer Security
+              (DTLS)", RFC 7525, DOI 10.17487/RFC7525, May 2015,
+              <https://www.rfc-editor.org/rfc/rfc7525>.
 
    [JWS]      Jones, M., Bradley, J., and N. Sakimura, "JSON Web
               Signature (JWS)", RFC 7515, DOI 10.17487/RFC7515, May
@@ -919,6 +1271,12 @@ WWW-Authenticate: Bearer error="transaction_authorization_required",
    [JWT]      Jones, M., Bradley, J., and N. Sakimura, "JSON Web Token
               (JWT)", RFC 7519, DOI 10.17487/RFC7519, May 2015,
               <https://www.rfc-editor.org/rfc/rfc7519>.
+
+   [OAUTH-DEVICE]
+              Denniss, W., Bradley, J., Jones, M., and H. Tschofenig,
+              "OAuth 2.0 Device Authorization Grant", RFC 8628,
+              DOI 10.17487/RFC8628, August 2019,
+              <https://www.rfc-editor.org/rfc/rfc8628>.
 
    [OAUTH-FRAMEWORK]
               Hardt, D., "The OAuth 2.0 Authorization Framework", Work
@@ -970,7 +1328,7 @@ WWW-Authenticate: Bearer error="transaction_authorization_required",
               <https://datatracker.ietf.org/doc/html/draft-ietf-oauth-
               transaction-tokens-08>.
 
-8.2.  Informative References
+9.2.  Informative References
 
    [IANA.HTTP.FieldNames]
               "Hypertext Transfer Protocol (HTTP) Field Name Registry",
@@ -989,6 +1347,12 @@ WWW-Authenticate: Bearer error="transaction_authorization_required",
               Authentication Challenge Protocol", RFC 9470,
               DOI 10.17487/RFC9470, September 2023,
               <https://www.rfc-editor.org/rfc/rfc9470>.
+
+   [TLS]      Rescorla, E., "The Transport Layer Security (TLS) Protocol
+              Version 1.3", Work in Progress, Internet-Draft, draft-
+              ietf-tls-rfc8446bis-14, 13 September 2025,
+              <https://datatracker.ietf.org/doc/html/draft-ietf-tls-
+              rfc8446bis-14>.
 
 Acknowledgments
 
