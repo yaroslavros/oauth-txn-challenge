@@ -54,9 +54,9 @@ This document defines an OAuth mechanism for transaction-specific authorization 
 A protected resource can require additional authorization for a particular operation by
 returning a transaction authorization challenge. This is useful when requests are mediated by
 agents, automated workflows, or delegated services and the protected resource requires
-confirmation from a human user, resource owner, or organizational authority.  The client
+confirmation from a human user, resource owner, or organizational authority. The client
 presents the challenge to an authorization server, which validates the challenge, obtains
-any required approval, and issues a transaction token.  The transaction token is then
+any required approval, and issues a transaction token. The transaction token is then
 presented to the protected resource as evidence that the challenged operation was authorized.
 
 --- middle
@@ -76,7 +76,7 @@ behalf the request is made, a different resource owner, or an organizational aut
 an administrator, manager, data owner, or policy decision point.
 
 This document defines a transaction authorization challenge. A protected resource uses this
-challenge to request additional authorization for a specific operation.  The challenge is
+challenge to request additional authorization for a specific operation. The challenge is
 relayed to a client, which presents it to an authorization server. The authorization server
 validates the challenge, obtains any required approval, and issues a transaction token as
 specified by {{!TXN-TOKENS=I-D.ietf-oauth-transaction-tokens}}. The transaction token is then
@@ -97,7 +97,7 @@ data, modifying access policy, or disclosing sensitive information.
 
 Local confirmation mechanisms within an agent framework can reduce risk, but they are not always
 visible to the protected resource and do not necessarily produce authorization evidence that the
-protected resource can validate.  A transaction authorization challenge allows the protected resource
+protected resource can validate. A transaction authorization challenge allows the protected resource
 to require explicit authorization for the concrete operation and to receive a transaction token
 representing that authorization.
 
@@ -121,7 +121,7 @@ user. Examples include approving access to regulated data, authorizing a product
 granting elevated administrative access, or permitting data transfer to an external party.
 
 A transaction authorization challenge allows the protected resource to request authorization evidence from
-an authorization server or associated policy infrastructure.  The authorization server validates the challenge,
+an authorization server or associated policy infrastructure. The authorization server validates the challenge,
 applies organizational policy, obtains any required approval, and issues a transaction token only when the
 required authorization has been obtained.
 
@@ -157,7 +157,7 @@ The protected resource receives a request and determines whether the authorizati
 with the request is sufficient. If the protected resource determines that the requested operation requires
 transaction-specific authorization, it returns a transaction authorization challenge.
 
-The agent is the component that attempted the operation at the protected resource.  The agent relays
+The agent is the component that attempted the operation at the protected resource. The agent relays
 the transaction authorization challenge to the client and later presents the resulting transaction token
 to the protected resource. The agent is not trusted to modify the contents of the challenge or the resulting
 transaction token.
@@ -329,7 +329,7 @@ A transaction authorization challenge MUST contain the following claims:
   challenge and any transaction token issued in response to it.
 
 `authorization_details`:
-: Authorization Details claim as defined in {{!OAUTH-RAR=RFC9396}}. Structured description of the operation
+: Claim containing Authorization Details as defined in {{!OAUTH-RAR=RFC9396}}. Structured description of the operation
   for which transaction-specific authorization is requested.
 
 `reason`:
@@ -418,10 +418,32 @@ transaction authorization challenge MUST identify the signing key in that JWK Se
 
 If the challenge cannot be validated, the client or authorization server MUST NOT treat the challenge as authentic.
 
+## Agent Relay
+
+After receiving a transaction authorization challenge from a protected resource, the agent relays the challenge
+to the client using a deployment-specific client-agent protocol.
+
+The agent MUST relay the transaction authorization challenge without modifying it and MUST NOT replace it with
+an agent-generated description of the requested operation. The client MUST treat any agent-supplied
+description as advisory. Any authorization decision, user display, or disclosure decision MUST be based on
+the validated challenge or on protected resource state identified by the validated challenge.
+
+A client-agent protocol that carries transaction authorization challenges SHOULD distinguish a transaction
+authorization challenge from ordinary agent messages or natural-language content. For example, such a protocol
+can carry the challenge using a field named `transaction_challenge` whose value is the JWS Compact Serialization
+of the transaction authorization challenge.
+
+In deployments where one agent delegates work to another agent, a transaction authorization challenge MAY be
+relayed through one or more intermediate agents before reaching the client. Each agent that relays
+the challenge MUST relay it without modification. An intermediate agent MUST NOT replace the challenge with
+a new challenge unless it is itself acting as a protected resource for a distinct operation and generates a
+new signed transaction authorization challenge for that operation.
+
 ## Client Processing
 
-The client MUST verify that the `aud` claim identifies the authorization server to which the client intends to present
-the challenge. The client MUST NOT modify the challenge before presenting it to the authorization server.
+Before presenting the challenge to the authorization server, the client MUST validate the challenge signature,
+issuer, audience, and expiration. The client MUST verify that the `aud` claim identifies the authorization
+server to which the client intends to present the challenge.
 
 The client MAY display the challenge contents to the user before sending the challenge to the authorization server.
 This allows the user to decide whether to continue and whether to disclose the challenged transaction to the authorization server.
@@ -433,9 +455,10 @@ supplied by the agent.
 If the user declines to continue, or if the client cannot validate the challenge, the client MUST NOT present the challenge
 to the authorization server.
 
-## Authorization Server Processing
+## Authorization Server Processing {#authorization-server-processing}
 
-The authorization server MUST validate the transaction authorization challenge before issuing a transaction token.
+The authorization server MUST validate the transaction authorization challenge before accepting it for processing or
+issuing a transaction token.
 
 At a minimum, the authorization server MUST verify that:
 
@@ -453,9 +476,9 @@ At a minimum, the authorization server MUST verify that:
 * the transaction token issued in response to the challenge will use the protected resource identified by the `iss` claim
   as its audience, unless an application profile defines a different audience binding;
 
-* the transaction identifier is present and acceptable;
+* the `txn` claim is present, is a string, and is acceptable;
 
-* the requested operation is sufficiently described; and
+* the requested operation is sufficiently described;
 
 * the client is permitted to request transaction authorization for the challenged operation.
 
@@ -466,47 +489,285 @@ The authorization server determines the approving party according to local polic
 associated with the original request, a different resource owner, an administrator, an organizational approval workflow,
 or another policy authority.
 
-The authorization server MUST obtain any required approval before issuing a transaction token.  The authorization server
+The authorization server MUST obtain any required approval before issuing a transaction token. The authorization server
 SHOULD present the approving party with sufficient information to understand the operation being authorized. The
 authorization server MUST NOT rely on an unprotected description supplied by the agent as the basis for the
 authorization decision.
 
-If the authorization server approves the challenge, it issues a transaction token as described in {{transaction-token}}.
-If the authorization server rejects the challenge, cannot validate the challenge, or cannot obtain the required approval,
-it MUST NOT issue a transaction token for the challenged operation.
+If the authorization server accepts the challenge for processing, the client obtains the result using the transaction
+authorization flow described in {{transaction-authorization-flow}}. If the authorization server rejects the challenge,
+cannot validate the challenge, or cannot obtain the required approval, it MUST NOT issue a transaction token for the
+challenged operation.
+
+# Transaction Authorization Flow {#transaction-authorization-flow}
+
+The approval required to satisfy a transaction authorization challenge can require interaction with a human user,
+resource owner, organizational workflow, or policy authority. Such interaction can take longer than a single HTTP
+request-response exchange. Therefore, this document defines an asynchronous polling flow based on the style of
+the OAuth 2.0 Device Authorization Grant defined in {{!OAUTH-DEVICE=RFC8628}}.
+
+Unlike the Device Authorization Grant, this flow does not use a device code, user code, or verification URI. Instead,
+the client submits a signed transaction authorization challenge to the authorization server. If the authorization server
+accepts the challenge for processing, it returns a transaction authorization identifier. The client then polls the transaction
+authorization endpoint with that identifier until the authorization server returns a transaction token or an error.
+
+A successful transaction authorization response does not indicate that the challenged operation has been approved.
+It only indicates that the authorization server has accepted the transaction authorization challenge for processing.
+The challenged operation is authorized only when the authorization server issues a transaction token and the protected
+resource accepts that token for the challenged operation.
+
+The following figure shows the transaction authorization flow:
+
+~~~aasvg
++--------+                         +----------------------+    +-----------------+
+| Client |                         | Authorization Server |    | Approving Party |
++--------+                         +----------------------+    +-----------------+
+    |                                         |                         |
+    | Transaction Authorization Request       |                         |
+    | transaction_challenge                   |                         |
+    |---------------------------------------->|                         |
+    |                                         |                         |
+    |      Transaction Authorization Response |                         |
+    |  transaction_authorization_id, interval |                         |
+    |<----------------------------------------|                         |
+    |                                         |                         |
+    |                                         | Approval Request        |
+    |                                         |------------------------>|
+    |                                         |                         |
+    | Transaction Authorization Poll          |                         |
+    | transaction_authorization_id            |                         |
+    |---------------------------------------->|                         |
+    |                                         |                         |
+    |       authorization_pending / slow_down |                         |
+    |<----------------------------------------|                         |
+    |                                         |                         |
+    |                                         |         Approval Result |
+    |                                         |<------------------------|
+    |                                         |                         |
+    | Transaction Authorization Poll          |                         |
+    | transaction_authorization_id            |                         |
+    |---------------------------------------->|                         |
+    |                                         |                         |
+    |      Transaction Authorization Response |                         |
+    |                       transaction token |                         |
+    |<----------------------------------------|                         |
+    |                                         |                         |
+~~~
+{: #fig-transaction-authorization-flow title="Transaction authorization flow"}
+
+## Transaction Authorization Request
+
+This specification defines a new OAuth endpoint: the transaction authorization endpoint. The authorization server MUST
+publish the location of the transaction authorization endpoint using the `transaction_authorization_endpoint` authorization
+server metadata parameter defined by this document.
+
+The client makes a transaction authorization request to the transaction authorization endpoint by sending a POST request
+with the following parameters using the `application/x-www-form-urlencoded` format with a character encoding of
+UTF-8 in the HTTP request entity-body:
+
+`client_id`:
+: REQUIRED if the client is not authenticating with the authorization server as described in {{Section 3.2.1 of OAUTH-FRAMEWORK}}.
+  The client identifier issued to the client during the registration process.
+
+`transaction_challenge`:
+: REQUIRED. The transaction authorization challenge received from the protected resource.
+
+For example, the client makes the following HTTPS request:
+
+~~~
+POST /txn-authorization HTTP/1.1
+Host: as.example.com
+Content-Type: application/x-www-form-urlencoded
+
+client_id=s6BhdRkqt3
+&transaction_challenge=eyJhbGciOiJFUzI1NiIsInR5cCI6InR4bi1hdXRoei1jaGFsbGVuZ2Urand0...
+~~~
+{: #fig-transaction-authorization-request title="Transaction authorization request"}
+
+Requests to the transaction authorization endpoint MUST use the Transport Layer Security (TLS) protocol {{?TLS=I-D.ietf-tls-rfc8446bis}}
+and implement the best practices of {{!BCP-195=RFC7525}}.
+
+The client authentication requirements of {{Section 3.2.1 of OAUTH-FRAMEWORK}} apply to requests on this endpoint, which means
+that confidential clients (those that have established client credentials) authenticate in the same manner as when making requests
+to the token endpoint, and public clients provide the "client_id" parameter to identify themselves.
+
+The authorization server MUST validate the transaction authorization challenge as described in {{authorization-server-processing}} before
+accepting the request for processing.
+
+## Transaction Authorization Response
+
+After receiving a transaction authorization request, the authorization server validates the transaction authorization challenge as
+described in {{authorization-server-processing}}. The authorization server then either issues a transaction token, indicates that
+the transaction authorization request is pending, or returns an error response.
+
+If the authorization server approves the challenged operation without additional interaction, it returns a transaction token
+response as described in {{successful-transaction-token-response}}.
+
+If additional interaction or policy evaluation is required, the authorization server returns an HTTP 200 response with an
+`application/json` body containing the following parameters:
+
+`transaction_authorization_id`:
+: REQUIRED. A server-generated identifier used by the client to continue or poll the transaction authorization request.
+
+`expires_in`:
+: REQUIRED. Lifetime in seconds of the transaction authorization request.
+
+`interval`:
+: OPTIONAL. Minimum amount of time in seconds that the client SHOULD wait between polling requests. If omitted, the client SHOULD use 5 seconds.
+
+`authorization_uri`:
+: OPTIONAL. URI that the client can present to the user or open in a user agent to continue the authorization interaction.
+  This URI is used when the authorization server requires an interactive approval or authentication step.
+
+The authorization server MUST bind the `transaction_authorization_id` to the client that initiated the transaction authorization request.
+
+A successful response containing `transaction_authorization_id` does not indicate that the challenged operation has been approved.
+It only indicates that the authorization server has accepted the transaction authorization request for processing.
+
+For example:
+
+~~~
+HTTP/1.1 200 OK
+Content-Type: application/json
+Cache-Control: no-store
+
+{
+  "transaction_authorization_id": "txn-authz-abc123",
+  "expires_in": 300,
+  "interval": 5
+}
+~~~
+{: #fig-transaction-authorization-response title="Transaction authorization pending response"}
+
+The following example includes an `authorization_uri` for an authorization interaction:
+
+~~~
+HTTP/1.1 200 OK
+Content-Type: application/json
+Cache-Control: no-store
+
+{
+  "transaction_authorization_id": "txn-authz-abc123",
+  "authorization_uri": "https://as.example.com/txn-authorization/txn-authz-abc123",
+  "expires_in": 300,
+  "interval": 5
+}
+~~~
+{: #fig-transaction-authorization-interaction-response title="Transaction authorization interaction response"}
+
+## Pending and Polling
+
+If the authorization server returns a `transaction_authorization_id`, the client continues the transaction authorization
+request by polling the transaction authorization endpoint.
+
+The client polls by sending a POST request with the following parameters using the `application/x-www-form-urlencoded`
+format with a character encoding of UTF-8 in the HTTP request entity-body:
+
+`client_id`:
+: REQUIRED if the client is not authenticating with the authorization server as described in {{Section 3.2.1 of OAUTH-FRAMEWORK}}.
+  The client identifier issued to the client during the registration process.
+
+`transaction_authorization_id`:
+: REQUIRED. The transaction authorization identifier returned by the authorization server.
+
+For example:
+
+~~~
+POST /txn-authorization HTTP/1.1
+Host: as.example.com
+Content-Type: application/x-www-form-urlencoded
+
+client_id=s6BhdRkqt3
+&transaction_authorization_id=txn-authz-abc123
+~~~
+{: #fig-transaction-authorization-poll title="Polling a transaction authorization request"}
+
+The client MUST wait at least the number of seconds specified by the `interval` parameter before polling again.
+If no `interval` value was provided, the client MUST wait at least 5 seconds between polling requests.
+
+The authorization server MUST ensure that the client polling the transaction authorization endpoint is the
+same client that initiated the transaction authorization request, or is otherwise authorized to obtain
+the result.
+
+If the transaction authorization request is still pending, the authorization server returns an error response with the
+`authorization_pending` error code, as defined in {{Section 3.5 of OAUTH-DEVICE}}.
+
+For example:
+
+~~~
+HTTP/1.1 400 Bad Request
+Content-Type: application/json
+Cache-Control: no-store
+
+{
+  "error": "authorization_pending"
+}
+~~~
+{: #fig-transaction-authorization-pending title="Transaction authorization pending response"}
+
+The authorization server MAY return an error response with the `slow_down` error code, as defined in {{Section 3.5 of OAUTH-DEVICE}},
+to instruct the client to increase the polling interval. After receiving `slow_down`, the client MUST increase the polling interval by at
+least 5 seconds.
+
+On encountering a connection timeout, clients MUST unilaterally reduce their polling frequency before retrying. The use of an exponential
+backoff algorithm to achieve this, such as doubling the polling interval on each such connection timeout, is RECOMMENDED.
+
+If the transaction authorization request is approved, the authorization server returns a transaction token response as described in
+{{successful-transaction-token-response}}.
+
+If the approving party denies the request, the authorization server returns an error response with the `access_denied` error code.
+If the transaction authorization request has expired, the authorization server returns an error response with the `expired_token`
+error code, as defined in {{Section 3.5 of OAUTH-DEVICE}}.
+
+## Successful Transaction Token Response {#successful-transaction-token-response}
+
+If the transaction authorization request is approved, the authorization server returns a transaction token response.
+
+The transaction token response uses the response format defined by {{TXN-TOKENS}}. The transaction token MUST contain the `txn`
+value from the transaction authorization challenge. The transaction token MUST use the `iss` value from the transaction authorization
+challenge as its audience unless an application profile defines a different audience binding.
+
+For example:
+
+~~~
+HTTP/1.1 200 OK
+Content-Type: application/json
+Cache-Control: no-store
+
+{
+  "access_token": "eyJhbGciOiJFUzI1NiIsInR4bnRva2VuK2p3dCJ9...",
+  "issued_token_type": "urn:ietf:params:oauth:token-type:txn_token",
+  "token_type": "N_A"
+}
+~~~
+{: #fig-transaction-token-response title="Successful transaction token response"}
 
 # Transaction Token {#transaction-token}
 
-A transaction token issued in response to a transaction authorization challenge represents authorization for the
-challenged operation. The transaction token is issued by the authorization server identified by the
-`aud` claim of the transaction authorization challenge and is presented to the protected resource that issued the challenge.
+A transaction token issued in response to a transaction authorization challenge represents authorization for the challenged operation. This
+document profiles the transaction token defined in {{TXN-TOKENS}} for use as evidence of transaction-specific authorization.
 
-This document profiles the transaction token defined in {{TXN-TOKENS}} for use as evidence of transaction-specific authorization.
+The transaction token is issued by the authorization server identified by the `aud` claim of the transaction authorization challenge and is
+presented to the protected resource that issued the challenge.
 
-## Token Issuance
+The transaction token MUST contain sufficient information for the protected resource to determine that the token authorizes the challenged
+operation. This information can include the `authorization_details` claim from the challenge, a reference to protected resource state, or other
+information agreed between the protected resource and authorization server.
 
-If the authorization server approves a transaction authorization challenge, it issues a transaction token to the client.
-The authorization server MUST NOT issue a transaction token unless it has successfully validated the challenge and
-obtained any required approval.
+The transaction token MUST have a limited lifetime. The authorization server SHOULD issue transaction tokens with short expiration times because
+they represent authorization for a specific operation.
 
-The transaction token MUST contain the `txn` claim from the transaction authorization challenge. The transaction token
-MUST use the `iss` value from the transaction authorization challenge as its audience unless an application profile defines
-a different audience binding.
-
-The transaction token MUST contain sufficient information for the protected resource to determine that the token authorizes
-the challenged operation. This information can include the `authorization_details` claim from the challenge, a reference
-to protected resource state, or other information agreed between the protected resource and authorization server.
-
-The transaction token MUST have a limited lifetime. The authorization server SHOULD issue transaction tokens with short
-expiration times because they represent authorization for a specific operation.
-
-When requester context, such as the `act` claim, is present in the transaction authorization challenge, the authorization
-server MUST include equivalent requester context in the transaction token or otherwise bind the token to that context.
+When requester context, such as the `act` claim, is present in the transaction authorization challenge, the authorization server MUST include
+equivalent requester context in the transaction token or otherwise bind the transaction token to that context.
 
 ## Token Presentation
 
 The client provides the transaction token to the agent. The agent presents the transaction token to the protected resource
 together with the request for the challenged operation.
+
+In deployments where one agent delegates work to another agent, the transaction token MAY be relayed through one or more intermediate agents
+before being presented to the protected resource. Each agent that relays the transaction token MUST relay it without modification. An agent MUST
+NOT use the transaction token for a different transaction, different protected resource, or different requester context.
 
 When HTTP is used, the transaction token MUST be presented using the `Txn-Token` header field defined by {{TXN-TOKENS}}.
 
@@ -615,8 +876,8 @@ confused-deputy attacks.
 # IANA Considerations
 
 This document registers the `Accept-Txn-Challenge` HTTP field name, one
-OAuth error code, one OAuth parameter, and two OAuth Protected Resource
-Metadata parameters.
+OAuth error code, two OAuth parameters, two OAuth Protected Resource
+Metadata parameters, one OAuth Authorization Server Metadata Parameter and two JWT claims.
 
 ## HTTP Field Name Registration
 
@@ -655,19 +916,32 @@ Reference:
 
 ## OAuth Parameter Registration
 
-IANA is requested to register the following parameter in the "OAuth Parameters" registry {{IANA.OAuth.Parameters}}:
+IANA is requested to register the following parameters in the "OAuth Parameters" registry {{IANA.OAuth.Parameters}}:
 
 Name:
 : transaction_challenge
 
 Parameter Usage Location:
-: rs-client response
+: rs-client response, transaction authorization request
 
 Change controller:
 : IETF
 
 Reference:
 : this document
+
+Name:
+: transaction_authorization_id
+
+Parameter Usage Location:
+: transaction authorization request, transaction authorization response
+
+Change controller:
+: IETF
+
+Reference:
+: this document
+
 
 ## OAuth Protected Resource Metadata Registration
 
@@ -690,6 +964,22 @@ Metadata name:
 
 Metadata description:
 : JSON array containing the JWS `alg` values supported by the protected resource for transaction authorization challenges.
+
+Change controller:
+: IETF
+
+Reference:
+: this document
+
+## OAuth Authorization Server Metadata Registration
+
+IANA is requested to register the following value in the "OAuth Authorization Server Metadata" registry {{IANA.OAuth.Parameters}}.
+
+Metadata name:
+: transaction_authorization_endpoint
+
+Metadata description:
+: URL of the authorization server endpoint to which clients submit transaction authorization challenges.
 
 Change controller:
 : IETF
