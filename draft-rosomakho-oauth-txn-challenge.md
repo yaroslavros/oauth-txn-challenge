@@ -610,7 +610,7 @@ If additional interaction or policy evaluation is required, the authorization se
 : REQUIRED. A server-generated identifier used by the client to continue or poll the transaction authorization request.
 
 `expires_in`:
-: REQUIRED. Lifetime in seconds of the transaction authorization request.
+: REQUIRED. Lifetime in seconds of the pending transaction authorization request maintained by the authorization server.
 
 `interval`:
 : OPTIONAL. Minimum amount of time in seconds that the client SHOULD wait between polling requests. If omitted, the client SHOULD use 5 seconds.
