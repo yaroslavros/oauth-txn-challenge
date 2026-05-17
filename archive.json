@@ -1,6 +1,6 @@
 {
   "magic": "E!vIA5L86J2I",
-  "timestamp": "2026-05-14T02:51:54.155240+00:00",
+  "timestamp": "2026-05-17T02:49:38.764364+00:00",
   "repo": "yaroslavros/oauth-txn-challenge",
   "labels": [
     {
@@ -49,6 +49,119 @@
       "color": "ffffff"
     }
   ],
-  "issues": [],
+  "issues": [
+    {
+      "number": 1,
+      "id": "I_kwDOSSp7CM8AAAABCXfA5Q",
+      "title": "How does a resource server decide to invoke human approval?",
+      "url": "https://github.com/yaroslavros/oauth-txn-challenge/issues/1",
+      "state": "OPEN",
+      "author": "PieterKas",
+      "authorAssociation": "NONE",
+      "assignees": [],
+      "labels": [],
+      "body": "It may be helpful to add an additional sentence or two, or maybe a paragraph, to indicate what would cause a resource server to decide that it needs additional human intervention. For example, this may be a good place to point out the role of policy-based access control, where additional policy constraints are applied that results in the need for additional approvals.",
+      "createdAt": "2026-05-15T12:14:56Z",
+      "updatedAt": "2026-05-15T12:14:56Z",
+      "closedAt": null,
+      "comments": []
+    },
+    {
+      "number": 2,
+      "id": "I_kwDOSSp7CM8AAAABCXi1hw",
+      "title": "Transaction tokens are not Access Tokens",
+      "url": "https://github.com/yaroslavros/oauth-txn-challenge/issues/2",
+      "state": "OPEN",
+      "author": "PieterKas",
+      "authorAssociation": "NONE",
+      "assignees": [],
+      "labels": [],
+      "body": "I would propose that instead of issuing a transaction token in response to the challenge, the authorisation server should issue an access token with some kind of indicator that the user has approved the explicit transaction and maybe with some additional claims, maybe as RAR claims, and then have that presented back to the resource server.\n\nTransaction tokens are really designed to carry transaction context based on the access token and are requested by the resource server, not by the client. Having the client pass around transaction tokens and then using a transaction token effectively as an access token feels problematic. I think just re-casting this as an access token with some specific claims that indicate that the user did approve the specific transaction is more likely to provide a smooth integration path that's going to be safer and easier to integrate rather than this sort of unusual flow of a transaction token being issued to a client, which is then presented to a resource server, which treats it as an access token. ",
+      "createdAt": "2026-05-15T12:25:08Z",
+      "updatedAt": "2026-05-15T12:25:08Z",
+      "closedAt": null,
+      "comments": []
+    },
+    {
+      "number": 3,
+      "id": "I_kwDOSSp7CM8AAAABCXjttw",
+      "title": "Challenge Capability Signal as a Client Metadata",
+      "url": "https://github.com/yaroslavros/oauth-txn-challenge/issues/3",
+      "state": "OPEN",
+      "author": "PieterKas",
+      "authorAssociation": "NONE",
+      "assignees": [],
+      "labels": [],
+      "body": "The challenge capability field is presented as an inline parameter, and I wonder if it isn't really something that should be communicated as client metadata through something like CIMD or similar. Maybe both are options, but having clients advertise capability through metadata feels more consistent. ",
+      "createdAt": "2026-05-15T12:27:34Z",
+      "updatedAt": "2026-05-15T12:27:34Z",
+      "closedAt": null,
+      "comments": []
+    },
+    {
+      "number": 4,
+      "id": "I_kwDOSSp7CM8AAAABCXlkBg",
+      "title": "How does resource owner differ from human user?",
+      "url": "https://github.com/yaroslavros/oauth-txn-challenge/issues/4",
+      "state": "OPEN",
+      "author": "PieterKas",
+      "authorAssociation": "NONE",
+      "assignees": [],
+      "labels": [],
+      "body": "The Trasnaction Authorization Flow section distinguish between them, how would they be different? Could we just say \"resource owner\"?",
+      "createdAt": "2026-05-15T12:32:43Z",
+      "updatedAt": "2026-05-15T12:32:43Z",
+      "closedAt": null,
+      "comments": []
+    },
+    {
+      "number": 5,
+      "id": "I_kwDOSSp7CM8AAAABCXnOfg",
+      "title": "Claims Challenge mechanism",
+      "url": "https://github.com/yaroslavros/oauth-txn-challenge/issues/5",
+      "state": "OPEN",
+      "author": "PieterKas",
+      "authorAssociation": "NONE",
+      "assignees": [],
+      "labels": [],
+      "body": "A few years ago we looked at a \"claims challenge\" type mechanism - effectively a mechanism where the resource server concluded that it had insufficient authorization and requested the client to go back to the AS and get a new acccess token with a new claim (or sert of claims). It had echoes of \"step-up auth\" but not quite and we never pursued it, but I wonder if that could be a cleaner way than having extra token passing around.",
+      "createdAt": "2026-05-15T12:37:20Z",
+      "updatedAt": "2026-05-15T12:37:20Z",
+      "closedAt": null,
+      "comments": []
+    },
+    {
+      "number": 6,
+      "id": "I_kwDOSSp7CM8AAAABCX2KiQ",
+      "title": "Consent Phishing Risks",
+      "url": "https://github.com/yaroslavros/oauth-txn-challenge/issues/6",
+      "state": "OPEN",
+      "author": "PieterKas",
+      "authorAssociation": "NONE",
+      "assignees": [],
+      "labels": [],
+      "body": "Are there consent phishing risks with this implementation that should be considered?",
+      "createdAt": "2026-05-15T13:16:25Z",
+      "updatedAt": "2026-05-15T13:16:25Z",
+      "closedAt": null,
+      "comments": []
+    },
+    {
+      "number": 7,
+      "id": "I_kwDOSSp7CM8AAAABCX5arQ",
+      "title": "Could this be built on CIBA?",
+      "url": "https://github.com/yaroslavros/oauth-txn-challenge/issues/7",
+      "state": "OPEN",
+      "author": "PieterKas",
+      "authorAssociation": "NONE",
+      "assignees": [],
+      "labels": [],
+      "body": "Thinking about this flow compared to CIBA, the main observation is that this flow adds the resource server interaction into the flow that is absent from CIBA, but once you get to the client/AS interactions, it shares many features with CIBA. What if the only part that needs to be added is the interaction with the RS, which signals specific details that needs to be used, and then passing that as the login_hint token.\n\nIt also requries switching the thing that gets provisioned to the client back to a OAuth access token, which I think is better than having transaction tokens as access tokens (we actually just added a section to the trasnaction token spec to make it explicit that it should not be used that way https://github.com/oauth-wg/oauth-transaction-tokens/pull/345)",
+      "createdAt": "2026-05-15T13:24:37Z",
+      "updatedAt": "2026-05-15T13:24:37Z",
+      "closedAt": null,
+      "comments": []
+    }
+  ],
   "pulls": []
 }
