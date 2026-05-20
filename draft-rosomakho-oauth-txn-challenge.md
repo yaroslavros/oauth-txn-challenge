@@ -79,7 +79,7 @@ an administrator, manager, data owner, or policy decision point.
 This document defines a transaction authorization challenge. A protected resource uses this
 challenge to request additional authorization for a specific operation. The challenge is
 relayed to a client, which presents it to an authorization server. The authorization server
-validates the challenge, obtains any required approval, and issues an OAuth 2.1 access token
+validates the challenge, obtains any required approval, and issues an OAuth 2.0 access token
 whose granted authorization details, expressed using Rich Authorization Requests
 ({{!OAUTH-RAR=RFC9396}}), describe the approved operation and bind the access token to the
 challenged transaction. The access token is then presented to the protected resource as
