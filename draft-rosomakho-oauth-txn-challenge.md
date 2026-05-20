@@ -83,7 +83,7 @@ validates the challenge, obtains any required approval, and issues an OAuth 2.0 
 whose granted authorization details, expressed using Rich Authorization Requests
 ({{!OAUTH-RAR=RFC9396}}), describe the approved operation and bind the access token to the
 challenged transaction. The access token is then presented to the protected resource as
-evidence that the challenged operation was authorized. Reusing the OAuth 2.1 access token
+evidence that the challenged operation was authorized. Reusing the OAuth 2.0 access token
 abstraction avoids defining a new bearer artifact and allows existing access-token validation
 and protection mechanisms, including sender-constrained access tokens, to apply unchanged.
 
