@@ -56,7 +56,7 @@ returning a transaction authorization challenge. This is useful when requests ar
 agents, automated workflows, or delegated services and the protected resource requires
 confirmation from a human user, resource owner, or organizational authority. The client
 presents the challenge to an authorization server, which validates the challenge, obtains
-any required approval, and issues an access token whose granted authorization details, expressed
+any required approval, and issues an OAuth 2.0 access token whose granted authorization details, expressed
 using Rich Authorization Requests, describe the approved operation. The access token is then
 presented to the protected resource as evidence that the challenged operation was authorized.
 
