@@ -64,7 +64,7 @@ presented to the protected resource as evidence that the challenged operation wa
 
 # Introduction
 
-OAuth 2.1 ({{!OAUTH-FRAMEWORK=I-D.ietf-oauth-v2}}) access tokens authorize access to protected
+OAuth 2.0 ({{!OAUTH-FRAMEWORK=I-D.ietf-oauth-v2}}) access tokens authorize access to protected
 resources. In many deployments, however, a protected resource cannot determine whether a
 requested operation is acceptable based only on the access token that accompanies the request.
 The access token might establish that the caller is authorized to interact with the protected
@@ -785,7 +785,7 @@ operations.
 # Access Token {#access-token}
 
 The access token issued in response to a transaction authorization challenge represents authorization for the challenged operation.
-It is an OAuth 2.1 access token whose granted authorization details, expressed using the `authorization_details` parameter and claim
+It is an OAuth 2.0 access token whose granted authorization details, expressed using the `authorization_details` parameter and claim
 defined in {{OAUTH-RAR}}, describe the operation that was approved.
 
 The access token is issued by the authorization server identified by the `aud` claim of the transaction authorization challenge and is
