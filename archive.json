@@ -1,6 +1,6 @@
 {
   "magic": "E!vIA5L86J2I",
-  "timestamp": "2026-05-19T02:56:03.645390+00:00",
+  "timestamp": "2026-05-21T03:24:51.783917+00:00",
   "repo": "yaroslavros/oauth-txn-challenge",
   "labels": [
     {
@@ -62,9 +62,17 @@
       "labels": [],
       "body": "It may be helpful to add an additional sentence or two, or maybe a paragraph, to indicate what would cause a resource server to decide that it needs additional human intervention. For example, this may be a good place to point out the role of policy-based access control, where additional policy constraints are applied that results in the need for additional approvals.",
       "createdAt": "2026-05-15T12:14:56Z",
-      "updatedAt": "2026-05-15T12:14:56Z",
+      "updatedAt": "2026-05-19T15:25:40Z",
       "closedAt": null,
-      "comments": []
+      "comments": [
+        {
+          "author": "identitymonk",
+          "authorAssociation": "NONE",
+          "body": "OAuth WG has always been adamant to spcificy Resource Server access control logic that could result to this as it would be implementer specific.\n\nStill as informational note, I agree with Pieter.",
+          "createdAt": "2026-05-19T15:25:40Z",
+          "updatedAt": "2026-05-19T15:25:40Z"
+        }
+      ]
     },
     {
       "number": 2,
@@ -78,9 +86,17 @@
       "labels": [],
       "body": "I would propose that instead of issuing a transaction token in response to the challenge, the authorisation server should issue an access token with some kind of indicator that the user has approved the explicit transaction and maybe with some additional claims, maybe as RAR claims, and then have that presented back to the resource server.\n\nTransaction tokens are really designed to carry transaction context based on the access token and are requested by the resource server, not by the client. Having the client pass around transaction tokens and then using a transaction token effectively as an access token feels problematic. I think just re-casting this as an access token with some specific claims that indicate that the user did approve the specific transaction is more likely to provide a smooth integration path that's going to be safer and easier to integrate rather than this sort of unusual flow of a transaction token being issued to a client, which is then presented to a resource server, which treats it as an access token. ",
       "createdAt": "2026-05-15T12:25:08Z",
-      "updatedAt": "2026-05-15T12:25:08Z",
+      "updatedAt": "2026-05-19T16:24:26Z",
       "closedAt": null,
-      "comments": []
+      "comments": [
+        {
+          "author": "identitymonk",
+          "authorAssociation": "NONE",
+          "body": "While I agree that a path for the issuance of an Access Token could be formalized.\n\nStill here the Transaction token is really requested by the Resource Server and not passed around by the Client. The Resource Server after polling the authorization status got the  Txn_Token issued to itself. Still to your point it does not carry exactly  the Access Token initially received by the Resource Server but by whatever way of formalizing the Authorization_Details structure the RS used when creating the challenge.",
+          "createdAt": "2026-05-19T16:24:26Z",
+          "updatedAt": "2026-05-19T16:24:26Z"
+        }
+      ]
     },
     {
       "number": 3,
@@ -94,9 +110,24 @@
       "labels": [],
       "body": "The challenge capability field is presented as an inline parameter, and I wonder if it isn't really something that should be communicated as client metadata through something like CIMD or similar. Maybe both are options, but having clients advertise capability through metadata feels more consistent. ",
       "createdAt": "2026-05-15T12:27:34Z",
-      "updatedAt": "2026-05-15T12:27:34Z",
+      "updatedAt": "2026-05-19T15:48:10Z",
       "closedAt": null,
-      "comments": []
+      "comments": [
+        {
+          "author": "identitymonk",
+          "authorAssociation": "NONE",
+          "body": "I reflected onto that and the problem is that the chaining of Agents will be dynamic: Agent B might be called in difference situation. Sometimes directly from Client C, sometimes after Agent M called Agent A which would call Agent B. Therefore ability to reach out to the origin Client will be dynamic and usage of  `Accept-Txn-Challenge` will be dynamic.\n\nI would be good to have the challenge capability in CIMD of Agent B as a way to signal \"I can relay challenge if needed\" but it will not replace the header as the former signal \"while I have the capability, I can do that for this session\".",
+          "createdAt": "2026-05-19T15:40:37Z",
+          "updatedAt": "2026-05-19T15:40:37Z"
+        },
+        {
+          "author": "identitymonk",
+          "authorAssociation": "NONE",
+          "body": "I thing @yaroslavros hinted at CIMD in the usage of Out-of-Band term at  `A protected resource MUST NOT return a transaction authorization challenge unless [...] the protected resource has out-of-band knowledge that the client supports this specification.``",
+          "createdAt": "2026-05-19T15:48:10Z",
+          "updatedAt": "2026-05-19T15:48:10Z"
+        }
+      ]
     },
     {
       "number": 4,
@@ -142,9 +173,17 @@
       "labels": [],
       "body": "Are there consent phishing risks with this implementation that should be considered?",
       "createdAt": "2026-05-15T13:16:25Z",
-      "updatedAt": "2026-05-15T13:16:25Z",
+      "updatedAt": "2026-05-19T15:45:29Z",
       "closedAt": null,
-      "comments": []
+      "comments": [
+        {
+          "author": "identitymonk",
+          "authorAssociation": "NONE",
+          "body": "This sounds real as it would invite resource servers to issue challenges opportunistically as a phishing vector or to fingerprint capable clients?\n\nOverall, this needs to be compound with #3\n\nWhile the work around for this would be to allowlist challenge capability per RS at agent, putting it in the CIMD document will make the protection harder. ",
+          "createdAt": "2026-05-19T15:45:29Z",
+          "updatedAt": "2026-05-19T15:45:29Z"
+        }
+      ]
     },
     {
       "number": 7,
@@ -161,7 +200,127 @@
       "updatedAt": "2026-05-15T13:24:37Z",
       "closedAt": null,
       "comments": []
+    },
+    {
+      "number": 8,
+      "id": "I_kwDOSSp7CM8AAAABCvhr_A",
+      "title": "4.4 Agent Relay: no mention of processing in intermediate relaying agent",
+      "url": "https://github.com/yaroslavros/oauth-txn-challenge/issues/8",
+      "state": "OPEN",
+      "author": "identitymonk",
+      "authorAssociation": "NONE",
+      "assignees": [],
+      "labels": [],
+      "body": "While the processing is client for the Client as defined in section 4.5, it would be important to mention that any intermediate agent relaying the `transaction_challenge` must do the same or at least must ensure that the Challenge is still a viable one to propagate.\n\nI recommend the following text:\n\n> In deployments where one agent delegates work to another agent, a transaction authorization challenge MAY be relayed through one or more intermediate agents before reaching the client. Each agent that relays the challenge MUST validate the challenge signature, issuer, and expiration then MUST relay it without modification if valid. An intermediate agent MUST NOT replace the challenge with a new challenge unless it is itself acting as a protected resource for a distinct operation and generates a new signed transaction authorization challenge for that operation.",
+      "createdAt": "2026-05-19T16:10:05Z",
+      "updatedAt": "2026-05-19T16:10:05Z",
+      "closedAt": null,
+      "comments": []
+    },
+    {
+      "number": 9,
+      "id": "I_kwDOSSp7CM8AAAABCvzJwQ",
+      "title": "Why is the Transaction Authorization request not a new Grant Flow type?",
+      "url": "https://github.com/yaroslavros/oauth-txn-challenge/issues/9",
+      "state": "OPEN",
+      "author": "identitymonk",
+      "authorAssociation": "NONE",
+      "assignees": [],
+      "labels": [],
+      "body": "Having the Transaction Authorization request as a Grant has multiple advantages as it will be automatically support all the extension of OAuth and could be supported on existing Authorize and Token endpoints that decides to extend to this.\n\nThis would align the proposal to the usual issuance model of OAuth, Device Code Grant Flow,  and CIBA from which it is inspired from.\n\nThis will simplify the proposal by removing the need for transaction_authorization_endpoint in AS metadata as the token endpoint already exists.",
+      "createdAt": "2026-05-19T16:49:18Z",
+      "updatedAt": "2026-05-19T16:49:18Z",
+      "closedAt": null,
+      "comments": []
     }
   ],
-  "pulls": []
+  "pulls": [
+    {
+      "number": 10,
+      "id": "PR_kwDOSSp7CM7dhMME",
+      "title": "Issue #2: replace transaction token with access token + RAR authorization_details",
+      "url": "https://github.com/yaroslavros/oauth-txn-challenge/pull/10",
+      "state": "OPEN",
+      "author": "PieterKas",
+      "authorAssociation": "NONE",
+      "assignees": [],
+      "labels": [],
+      "body": "Addresses #2.\n\n## Summary\n\nThis PR reframes the result of a transaction authorization challenge as an OAuth 2.1 access token whose granted `authorization_details` (per RFC 9396) describe the approved operation and bind the access token to the challenged transaction, instead of a transaction token issued under `draft-ietf-oauth-transaction-tokens`.\n\nIssue #2 argues that transaction tokens are designed to carry transaction context derived from an access token and are requested by the resource server, not the client. Using a transaction token as a bearer artifact carried by the client to the protected resource is an unusual pattern. Reusing the OAuth 2.1 access token abstraction:\n\n- avoids defining a new bearer artifact carried by the client to the protected resource,\n- lets existing access-token validation and protection mechanisms apply unchanged (including sender-constrained access tokens via DPoP / mTLS),\n- aligns the response semantics with the standard OAuth 2.1 token endpoint response and the `authorization_details` response parameter defined in RFC 9396 \u00a77,\n- keeps the rest of the challenge mechanism intact: the challenge format, the asynchronous polling flow, the agent-relay rules, and the protected-resource metadata for challenge signing keys are unchanged.\n\nThe challenge still conveys the requested `authorization_details`; the authorization server still validates the challenge, obtains approval, and binds the result to the `txn` value. Only the issued artifact changes \u2014 from a `urn:ietf:params:oauth:token-type:txn_token` carried in a `Txn-Token` header to a regular access token carried in the `Authorization` header.\n\n## Changes\n\n- **Abstract / Introduction** \u2014 describe the result as an access token whose granted authorization details describe the approved operation; drop the `draft-ietf-oauth-transaction-tokens` dependency.\n- **Conventions and Definitions** \u2014 remove the \"transaction token\" term; pull `authorization_details` into the definitions list referencing RFC 9396.\n- **Architecture and Flow** \u2014 replace transaction-token wording (including the flow diagram label).\n- **Challenge claims** \u2014 clarify that the access token issued in response carries granted `authorization_details` derived from the challenge.\n- **Token response (`successful-access-token-response`)** \u2014 use the standard OAuth token-endpoint response format with the `authorization_details` response parameter; new example with `token_type: Bearer`, `expires_in`, and a granted `authorization_details` array.\n- **New \"Access Token\" section** replacing \"Transaction Token\":\n  - binding to the `txn` value from the challenge\n  - granted `authorization_details` carried in the token (e.g. as JWT claim per RFC 9068 + RFC 9396 \u00a79)\n  - explicit scoping to the challenged operation \u2014 not a general-purpose access token\n  - short lifetime; sender-constrained access tokens recommended for high-impact operations\n- **Token presentation** \u2014 use the `Authorization` request header (Bearer / DPoP / mTLS) instead of the `Txn-Token` header.\n- **Protected resource validation** \u2014 validate the access token, its `txn` binding, and that its granted `authorization_details` authorize the requested operation; explicit prohibition on honouring the granted authorization details for any operation other than the challenged one.\n- **Security Considerations** \u2014 re-cast around access tokens; new paragraph requiring protected resources to evaluate granted `authorization_details` against the operation being requested so a token issued for one operation cannot authorize a different operation; carries forward replay, single-use, requester-context, and privacy guidance.\n- **IANA** \u2014 no removals required; none of the previously registered items were transaction-token-specific.\n\n## Open design points worth WG discussion\n\n- Whether the access token issued in response to a challenge should be presentable alongside the original access token (two `Authorization`-equivalent credentials) or should replace it for the challenged request. The current text assumes a single Authorization header carrying the new access token; this matches RAR conventions but should be explicit if WG prefers otherwise.\n- Whether `txn` should be REQUIRED in the access token (as drafted) or RECOMMENDED, given that the granted `authorization_details` alone may already pin the token to a specific operation in some deployments.\n- Whether to mandate sender-constraint for the access token (currently SHOULD for high-impact, MAY otherwise).\n\n## Test plan\n- [ ] kramdown-rfc build succeeds (CI)\n- [ ] HTML/text rendering review of new \"Access Token\" section and revised flow\n- [ ] WG / shepherd review of the design points above\n",
+      "createdAt": "2026-05-20T12:16:02Z",
+      "updatedAt": "2026-05-20T12:33:11Z",
+      "baseRepository": "yaroslavros/oauth-txn-challenge",
+      "baseRefName": "main",
+      "baseRefOid": "723c320d80db3012396ba8deff78715c3ec0be6c",
+      "headRepository": "PieterKas/oauth-txn-challenge",
+      "headRefName": "issue-2-access-token-with-rar",
+      "headRefOid": "a3b4c309f891cb5a92bc8f46dc9e65da62895274",
+      "closedAt": null,
+      "mergedAt": null,
+      "mergedBy": null,
+      "mergeCommit": null,
+      "comments": [],
+      "reviews": [
+        {
+          "id": "PRR_kwDOSSp7CM8AAAABAf2P9w",
+          "commit": {
+            "abbreviatedOid": "b03bb66"
+          },
+          "author": "PieterKas",
+          "authorAssociation": "NONE",
+          "state": "COMMENTED",
+          "body": "",
+          "createdAt": "2026-05-20T12:18:08Z",
+          "updatedAt": "2026-05-20T12:18:08Z",
+          "comments": [
+            {
+              "originalPosition": 5,
+              "body": "```suggestion\nany required approval, and issues an OAuth 2.0 access token whose granted authorization details, expressed\n```",
+              "createdAt": "2026-05-20T12:18:08Z",
+              "updatedAt": "2026-05-20T12:18:08Z"
+            }
+          ]
+        },
+        {
+          "id": "PRR_kwDOSSp7CM8AAAABAf2tYA",
+          "commit": {
+            "abbreviatedOid": "8988540"
+          },
+          "author": "PieterKas",
+          "authorAssociation": "NONE",
+          "state": "COMMENTED",
+          "body": "",
+          "createdAt": "2026-05-20T12:19:09Z",
+          "updatedAt": "2026-05-20T12:19:09Z",
+          "comments": [
+            {
+              "originalPosition": 17,
+              "body": "```suggestion\nvalidates the challenge, obtains any required approval, and issues an OAuth 2.0 access token\n```",
+              "createdAt": "2026-05-20T12:19:09Z",
+              "updatedAt": "2026-05-20T12:19:09Z"
+            }
+          ]
+        },
+        {
+          "id": "PRR_kwDOSSp7CM8AAAABAf3CMg",
+          "commit": {
+            "abbreviatedOid": "bfab25f"
+          },
+          "author": "PieterKas",
+          "authorAssociation": "NONE",
+          "state": "COMMENTED",
+          "body": "",
+          "createdAt": "2026-05-20T12:19:53Z",
+          "updatedAt": "2026-05-20T12:19:53Z",
+          "comments": [
+            {
+              "originalPosition": 21,
+              "body": "```suggestion\nevidence that the challenged operation was authorized. Reusing the OAuth 2.0 access token\n```",
+              "createdAt": "2026-05-20T12:19:53Z",
+              "updatedAt": "2026-05-20T12:19:53Z"
+            }
+          ]
+        }
+      ]
+    }
+  ]
 }
