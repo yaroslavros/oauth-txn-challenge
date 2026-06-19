@@ -803,8 +803,7 @@ because it represents authorization for a specific operation.
 When requester context, such as the `act` claim, is present in the transaction authorization challenge, the authorization server MUST
 include equivalent requester context in the access token or otherwise bind the access token to that context.
 
-This access token is scoped to the challenged operation. It is not a general-purpose access token for the protected resource and is
-not a substitute for the access token used to authorize unrelated requests. Clients and protected resources MUST NOT assume that the
+This access token is scoped to the challenged operation. Clients and protected resources MUST NOT assume that the
 access token issued in response to a transaction authorization challenge confers authorization beyond the operation described by its
 granted authorization details.
 
@@ -895,8 +894,7 @@ protected resource.
 The transaction authorization challenge and the resulting access token MUST be bound to the same transaction
 identifier. The protected resource MUST verify that the `txn` value bound to the access token matches the `txn`
 value from the challenge. An access token issued in response to a transaction authorization challenge MUST NOT be
-accepted as authorization for any operation other than the challenged operation, even if the access token would
-otherwise be accepted as a general-purpose access token for the protected resource.
+accepted as authorization for any operation other than the challenged operation.
 
 Access tokens issued in response to a transaction authorization challenge can be replayed if they are not
 sufficiently constrained. Authorization servers MUST issue these access tokens with short lifetimes and SHOULD
