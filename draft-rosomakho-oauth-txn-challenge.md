@@ -747,8 +747,8 @@ resource; when JWT access tokens defined in {{?JWT-AT=RFC9068}} are used, the `t
 respectively.
 
 The access token issued in response to a transaction authorization challenge is scoped to the challenged
-operation. It is not intended as a general-purpose access token for the protected resource and MUST NOT be
-used as authorization for any operation that is not described by its granted authorization details.
+operation and MUST NOT be accepted as authorization for any operation that is not described by its granted
+authorization details.
 
 For example:
 
