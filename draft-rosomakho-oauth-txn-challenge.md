@@ -64,7 +64,7 @@ presented to the protected resource as evidence that the challenged operation wa
 
 # Introduction
 
-OAuth 2.0 ({{!OAUTH-FRAMEWORK=I-D.ietf-oauth-v2}}) access tokens authorize access to protected
+OAuth 2.0 ({{!OAUTH-FRAMEWORK=RFC6749}}) access tokens authorize access to protected
 resources. In many deployments, however, a protected resource cannot determine whether a
 requested operation is acceptable based only on the access token that accompanies the request.
 The access token might establish that the caller is authorized to interact with the protected
