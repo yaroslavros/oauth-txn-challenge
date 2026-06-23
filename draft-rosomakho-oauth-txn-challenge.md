@@ -777,7 +777,8 @@ Cache-Control: no-store
 ~~~
 {: #fig-access-token-response title="Successful access token response"}
 
-The authorization server SHOULD issue the access token with a short lifetime because it represents
+
+The access token MUST have a limited lifetime. The authorization server SHOULD issue the access token with a short lifetime because it represents
 authorization for a specific operation. Sender-constrained access tokens, for example using DPoP
 ({{?DPOP=RFC9449}}) or mutual-TLS ({{?MTLS=RFC8705}}), MAY be used and are RECOMMENDED for high-impact
 operations.
@@ -796,9 +797,6 @@ operation. At a minimum, the access token MUST be bound to the `txn` value from 
 details that describe the approved operation. The granted authorization details MAY be the value of the `authorization_details` claim
 from the challenge, a value derived from it, or a reference to protected resource state agreed between the protected resource and the
 authorization server.
-
-The access token MUST have a limited lifetime. The authorization server SHOULD issue this access token with a short expiration time
-because it represents authorization for a specific operation.
 
 When requester context, such as the `act` claim, is present in the transaction authorization challenge, the authorization server MUST
 include equivalent requester context in the access token or otherwise bind the access token to that context.
