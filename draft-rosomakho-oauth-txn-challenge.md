@@ -29,8 +29,8 @@ author:
     organization: Zscaler
     email: yrosomakho@zscaler.com
 -
-    fullname: "Pieter Kasselman"
-    organization: "Defakto Security"
+    fullname: Pieter Kasselman
+    organization: Defakto Security
     email: pieter@defakto.security
 
 normative:
