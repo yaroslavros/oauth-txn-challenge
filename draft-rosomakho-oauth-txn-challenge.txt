@@ -4,8 +4,9 @@
 
 Web Authorization Protocol                                  Y. Rosomakho
 Internet-Draft                                                   Zscaler
-Intended status: Standards Track                              3 May 2026
-Expires: 4 November 2026
+Intended status: Standards Track                            P. Kasselman
+Expires: 26 December 2026                               Defakto Security
+                                                            24 June 2026
 
 
                OAuth Transaction Authorization Challenge
@@ -58,7 +59,7 @@ Status of This Memo
    time.  It is inappropriate to use Internet-Drafts as reference
    material or to cite them other than as "work in progress."
 
-   This Internet-Draft will expire on 4 November 2026.
+   This Internet-Draft will expire on 26 December 2026.
 
 Copyright Notice
 
@@ -111,7 +112,7 @@ Table of Contents
      9.1.  Normative References
      9.2.  Informative References
    Acknowledgments
-   Author's Address
+   Authors' Addresses
 
 1.  Introduction
 
@@ -1359,8 +1360,13 @@ Acknowledgments
 
    TODO acknowledge.
 
-Author's Address
+Authors' Addresses
 
    Yaroslav Rosomakho
    Zscaler
    Email: yrosomakho@zscaler.com
+
+
+   Pieter Kasselman
+   Defakto Security
+   Email: pieter@defakto.security
