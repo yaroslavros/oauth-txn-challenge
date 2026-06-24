@@ -29,6 +29,10 @@ author:
     organization: Zscaler
     email: yrosomakho@zscaler.com
  -
+    fullname: Karl McGuinness
+    organization: Independent
+    email: public@karlmcguinness.com
+ -
     fullname: Pieter Kasselman
     organization: Defakto Security
     email: pieter@defakto.security
