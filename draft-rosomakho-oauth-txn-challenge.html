@@ -14,7 +14,8 @@ returning a transaction authorization challenge. This is useful when requests ar
 agents, automated workflows, or delegated services and the protected resource requires
 confirmation from a human user, resource owner, or organizational authority. The client
 presents the challenge to an authorization server, which validates the challenge, obtains
-any required approval, and issues a transaction token. The transaction token is then
+any required approval, and issues an OAuth 2.0 access token whose granted authorization details, expressed
+using Rich Authorization Requests, describe the approved operation. The access token is then
 presented to the protected resource as evidence that the challenged operation was authorized. 
     " name="description">
 <meta content="xml2rfc 3.34.0" name="generator">
@@ -1099,7 +1100,8 @@ returning a transaction authorization challenge. This is useful when requests ar
 agents, automated workflows, or delegated services and the protected resource requires
 confirmation from a human user, resource owner, or organizational authority. The client
 presents the challenge to an authorization server, which validates the challenge, obtains
-any required approval, and issues a transaction token. The transaction token is then
+any required approval, and issues an OAuth 2.0 access token whose granted authorization details, expressed
+using Rich Authorization Requests, describe the approved operation. The access token is then
 presented to the protected resource as evidence that the challenged operation was authorized.<a href="#section-abstract-1" class="pilcrow">¶</a></p>
 </section>
 <section class="note rfcEditorRemove" id="section-note.1">
@@ -1230,12 +1232,12 @@ presented to the protected resource as evidence that the challenged operation wa
                 <p id="section-toc.1-1.5.2.3.1"><a href="#section-5.3" class="auto internal xref">5.3</a>.  <a href="#name-pending-and-polling" class="internal xref">Pending and Polling</a></p>
 </li>
               <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.5.2.4">
-                <p id="section-toc.1-1.5.2.4.1"><a href="#section-5.4" class="auto internal xref">5.4</a>.  <a href="#name-successful-transaction-toke" class="internal xref">Successful Transaction Token Response</a></p>
+                <p id="section-toc.1-1.5.2.4.1"><a href="#section-5.4" class="auto internal xref">5.4</a>.  <a href="#name-successful-access-token-res" class="internal xref">Successful Access Token Response</a></p>
 </li>
             </ul>
 </li>
           <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.6">
-            <p id="section-toc.1-1.6.1"><a href="#section-6" class="auto internal xref">6</a>.  <a href="#name-transaction-token" class="internal xref">Transaction Token</a></p>
+            <p id="section-toc.1-1.6.1"><a href="#section-6" class="auto internal xref">6</a>.  <a href="#name-access-token" class="internal xref">Access Token</a></p>
 <ul class="compact toc ulBare ulEmpty">
 <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.6.2.1">
                 <p id="section-toc.1-1.6.2.1.1"><a href="#section-6.1" class="auto internal xref">6.1</a>.  <a href="#name-token-presentation" class="internal xref">Token Presentation</a></p>
@@ -1297,7 +1299,7 @@ presented to the protected resource as evidence that the challenged operation wa
       <h2 id="name-introduction">
 <a href="#section-1" class="section-number selfRef">1. </a><a href="#name-introduction" class="section-name selfRef">Introduction</a>
       </h2>
-<p id="section-1-1">OAuth 2.1 (<span>[<a href="#OAUTH-FRAMEWORK" class="cite xref">OAUTH-FRAMEWORK</a>]</span>) access tokens authorize access to protected
+<p id="section-1-1">OAuth 2.0 (<span>[<a href="#OAUTH-FRAMEWORK" class="cite xref">OAUTH-FRAMEWORK</a>]</span>) access tokens authorize access to protected
 resources. In many deployments, however, a protected resource cannot determine whether a
 requested operation is acceptable based only on the access token that accompanies the request.
 The access token might establish that the caller is authorized to interact with the protected
@@ -1310,9 +1312,13 @@ an administrator, manager, data owner, or policy decision point.<a href="#sectio
 <p id="section-1-3">This document defines a transaction authorization challenge. A protected resource uses this
 challenge to request additional authorization for a specific operation. The challenge is
 relayed to a client, which presents it to an authorization server. The authorization server
-validates the challenge, obtains any required approval, and issues a transaction token as
-specified by <span>[<a href="#TXN-TOKENS" class="cite xref">TXN-TOKENS</a>]</span>. The transaction token is then
-presented to the protected resource as evidence that the challenged operation was authorized.<a href="#section-1-3" class="pilcrow">¶</a></p>
+validates the challenge, obtains any required approval, and issues an OAuth 2.0 access token
+whose granted authorization details, expressed using Rich Authorization Requests
+(<span>[<a href="#OAUTH-RAR" class="cite xref">OAUTH-RAR</a>]</span>), describe the approved operation and bind the access token to the
+challenged transaction. The access token is then presented to the protected resource as
+evidence that the challenged operation was authorized. Reusing the OAuth 2.0 access token
+abstraction avoids defining a new bearer artifact and allows existing access-token validation
+and protection mechanisms, including sender-constrained access tokens, to apply unchanged.<a href="#section-1-3" class="pilcrow">¶</a></p>
 <p id="section-1-4">This mechanism is complementary to OAuth step-up authentication defined in <span>[<a href="#OAUTH-STEP-UP" class="cite xref">OAUTH-STEP-UP</a>]</span>.
 Step-up authentication enables a protected resource to require stronger or fresher authentication
 of a user. A transaction authorization challenge instead requests authorization for a specific
@@ -1330,7 +1336,7 @@ data, modifying access policy, or disclosing sensitive information.<a href="#sec
 <p id="section-1.1-2">Local confirmation mechanisms within an agent framework can reduce risk, but they are not always
 visible to the protected resource and do not necessarily produce authorization evidence that the
 protected resource can validate. A transaction authorization challenge allows the protected resource
-to require explicit authorization for the concrete operation and to receive a transaction token
+to require explicit authorization for the concrete operation and to receive an access token
 representing that authorization.<a href="#section-1.1-2" class="pilcrow">¶</a></p>
 </section>
 </div>
@@ -1346,7 +1352,7 @@ from another party authorized to act for that resource owner, is required before
 can proceed.<a href="#section-1.2-1" class="pilcrow">¶</a></p>
 <p id="section-1.2-2">In this case, the transaction authorization challenge allows the protected resource to describe the
 requested operation and the authorization server to determine the appropriate approving party. The
-resulting transaction token represents authorization of the challenged operation by the party
+resulting access token represents authorization of the challenged operation by the party
 selected according to authorization server policy.<a href="#section-1.2-2" class="pilcrow">¶</a></p>
 </section>
 </div>
@@ -1360,7 +1366,7 @@ user. Examples include approving access to regulated data, authorizing a product
 granting elevated administrative access, or permitting data transfer to an external party.<a href="#section-1.3-1" class="pilcrow">¶</a></p>
 <p id="section-1.3-2">A transaction authorization challenge allows the protected resource to request authorization evidence from
 an authorization server or associated policy infrastructure. The authorization server validates the challenge,
-applies organizational policy, obtains any required approval, and issues a transaction token only when the
+applies organizational policy, obtains any required approval, and issues an access token only when the
 required authorization has been obtained.<a href="#section-1.3-2" class="pilcrow">¶</a></p>
 </section>
 </div>
@@ -1377,7 +1383,7 @@ described in BCP 14 <span>[<a href="#RFC2119" class="cite xref">RFC2119</a>]</s
 appear in all capitals, as shown here.<a href="#section-2-1" class="pilcrow">¶</a></p>
 <p id="section-2-2">This document uses the terms "client", "authorization server", "access token", "refresh token", and "protected
 resource" as defined by <span>[<a href="#OAUTH-FRAMEWORK" class="cite xref">OAUTH-FRAMEWORK</a>]</span>.<a href="#section-2-2" class="pilcrow">¶</a></p>
-<p id="section-2-3">This document uses the term "transaction token" as defined by <span>[<a href="#TXN-TOKENS" class="cite xref">TXN-TOKENS</a>]</span>.<a href="#section-2-3" class="pilcrow">¶</a></p>
+<p id="section-2-3">This document uses the term "authorization details" as defined by <span>[<a href="#OAUTH-RAR" class="cite xref">OAUTH-RAR</a>]</span>.<a href="#section-2-3" class="pilcrow">¶</a></p>
 <p id="section-2-4">This document defines the following additional terms:<a href="#section-2-4" class="pilcrow">¶</a></p>
 <span class="break"></span><dl class="dlParallel" id="section-2-5">
         <dt id="section-2-5.1">Approving Party:</dt>
@@ -1412,17 +1418,18 @@ server, and an approving party.<a href="#section-3-1" class="pilcrow">¶</a></p>
 with the request is sufficient. If the protected resource determines that the requested operation requires
 transaction-specific authorization, it returns a transaction authorization challenge.<a href="#section-3-2" class="pilcrow">¶</a></p>
 <p id="section-3-3">The agent is the component that attempted the operation at the protected resource. The agent relays
-the transaction authorization challenge to the client and later presents the resulting transaction token
+the transaction authorization challenge to the client and later presents the resulting access token
 to the protected resource. The agent is not trusted to modify the contents of the challenge or the resulting
-transaction token.<a href="#section-3-3" class="pilcrow">¶</a></p>
+access token.<a href="#section-3-3" class="pilcrow">¶</a></p>
 <p id="section-3-4">The client receives the transaction authorization challenge from the agent and presents it to the authorization
 server. The client is responsible for mediating the interaction between the agent-facing environment and the
 authorization server. The client does not need to interpret all application-specific details of the challenged
 transaction, but it <span class="bcp14">MUST</span> preserve the integrity of the challenge when presenting it to the authorization server.<a href="#section-3-4" class="pilcrow">¶</a></p>
 <p id="section-3-5">The authorization server validates the transaction authorization challenge, determines the approving party,
-obtains any required approval, and issues a transaction token. The authorization server can use local
-policy, resource metadata, resource-owner information, organizational policy, or other authorization context
-to determine whether the requested operation can be approved.<a href="#section-3-5" class="pilcrow">¶</a></p>
+obtains any required approval, and issues an access token whose granted authorization details describe the
+approved operation. The authorization server can use local policy, resource metadata, resource-owner
+information, organizational policy, or other authorization context to determine whether the requested operation
+can be approved.<a href="#section-3-5" class="pilcrow">¶</a></p>
 <p id="section-3-6">The approving party is the human user, resource owner, organizational authority, or policy authority whose
 approval is required. The approving party can be the same subject on whose behalf the agent is acting, but
 this is not required.<a href="#section-3-6" class="pilcrow">¶</a></p>
@@ -1505,17 +1512,18 @@ this is not required.<a href="#section-3-6" class="pilcrow">¶</a></p>
           <p id="section-3-10.6.1">The authorization server validates the challenge, determines the approving party, and obtains any required approval.<a href="#section-3-10.6.1" class="pilcrow">¶</a></p>
 </li>
         <li id="section-3-10.7">
-          <p id="section-3-10.7.1">The authorization server issues a transaction token to the client.<a href="#section-3-10.7.1" class="pilcrow">¶</a></p>
+          <p id="section-3-10.7.1">The authorization server issues an access token to the client. The access token's granted authorization
+details describe the approved operation, and the access token is bound to the challenged transaction.<a href="#section-3-10.7.1" class="pilcrow">¶</a></p>
 </li>
         <li id="section-3-10.8">
-          <p id="section-3-10.8.1">The client provides the transaction token to the agent.<a href="#section-3-10.8.1" class="pilcrow">¶</a></p>
+          <p id="section-3-10.8.1">The client provides the access token to the agent.<a href="#section-3-10.8.1" class="pilcrow">¶</a></p>
 </li>
         <li id="section-3-10.9">
-          <p id="section-3-10.9.1">The agent retries or continues the request and presents the transaction token to the protected resource.<a href="#section-3-10.9.1" class="pilcrow">¶</a></p>
+          <p id="section-3-10.9.1">The agent retries or continues the request and presents the access token to the protected resource.<a href="#section-3-10.9.1" class="pilcrow">¶</a></p>
 </li>
         <li id="section-3-10.10">
-          <p id="section-3-10.10.1">The protected resource validates the transaction token and processes the request if the token authorizes the
-challenged operation.<a href="#section-3-10.10.1" class="pilcrow">¶</a></p>
+          <p id="section-3-10.10.1">The protected resource validates the access token, including its authorization details, and processes the
+request if the token authorizes the challenged operation.<a href="#section-3-10.10.1" class="pilcrow">¶</a></p>
 </li>
       </ol>
 </section>
@@ -1527,8 +1535,8 @@ challenged operation.<a href="#section-3-10.10.1" class="pilcrow">¶</a></p>
       </h2>
 <p id="section-4-1">A transaction authorization challenge is a signed JWT (<span>[<a href="#JWT" class="cite xref">JWT</a>]</span>) generated by a protected resource to
 request transaction-specific authorization for a particular operation. The challenge describes the operation to be
-authorized, identifies the authorization server expected to process the challenge, and contains freshness and
-integrity protection.<a href="#section-4-1" class="pilcrow">¶</a></p>
+authorized, identifies the authorization server expected to process the challenge, identifies the intended
+audience of the resulting access token, and contains freshness and integrity protection.<a href="#section-4-1" class="pilcrow">¶</a></p>
 <p id="section-4-2">The challenge is consumed by the authorization server and can also be validated by the client before the client
 presents it to the authorization server. The agent relays the challenge, but it is not trusted to modify the challenge
 or to describe the challenged transaction.<a href="#section-4-2" class="pilcrow">¶</a></p>
@@ -1605,7 +1613,7 @@ protocol.<a href="#section-4.2-6" class="pilcrow">¶</a></p>
 The <code>alg</code> value <span class="bcp14">MUST NOT</span> be <code>none</code>.<a href="#section-4.2.1-1" class="pilcrow">¶</a></p>
 <p id="section-4.2.1-2">The <code>kid</code> value in the JOSE header is used to identify the signing key in the protected resource's JWK Set.<a href="#section-4.2.1-2" class="pilcrow">¶</a></p>
 <p id="section-4.2.1-3">The challenge claims identify the protected resource, the authorization server expected to process the
-challenge, the transaction being authorized, and the intended audience of the resulting transaction token.<a href="#section-4.2.1-3" class="pilcrow">¶</a></p>
+challenge, the transaction being authorized, and the intended audience of the resulting access token.<a href="#section-4.2.1-3" class="pilcrow">¶</a></p>
 </section>
 </div>
 <div id="challenge-claims">
@@ -1619,7 +1627,7 @@ challenge, the transaction being authorized, and the intended audience of the re
 <code>iss</code>:</dt>
             <dd style="margin-left: 1.5em" id="section-4.2.2-2.2">
               <p id="section-4.2.2-2.2.1">Issuer claim defined in <span>[<a href="#JWT" class="cite xref">JWT</a>]</span>. Identifier of the protected resource that generated the challenge. The
-transaction token issued in response to the challenge <span class="bcp14">MUST</span> use this value as its audience unless an
+access token issued in response to the challenge <span class="bcp14">MUST</span> use this value as its audience unless an
 application profile defines a different audience binding.<a href="#section-4.2.2-2.2.1" class="pilcrow">¶</a></p>
 </dd>
             <dd class="break"></dd>
@@ -1627,9 +1635,9 @@ application profile defines a different audience binding.<a href="#section-4.2.2
 <code>aud</code>:</dt>
             <dd style="margin-left: 1.5em" id="section-4.2.2-2.4">
               <p id="section-4.2.2-2.4.1">Audience claim defined in <span>[<a href="#JWT" class="cite xref">JWT</a>]</span>. Identifier of the authorization server expected to validate the challenge
-and issue a transaction token for the challenged operation. The value is selected by the protected resource
+and issue an access token for the challenged operation. The value is selected by the protected resource
 and need not be the issuer of the access token presented with the original request. The protected resource
-<span class="bcp14">MUST</span> select an authorization server that it trusts to evaluate the challenge and issue transaction tokens
+<span class="bcp14">MUST</span> select an authorization server that it trusts to evaluate the challenge and issue access tokens
 for the requested operation.<a href="#section-4.2.2-2.4.1" class="pilcrow">¶</a></p>
 </dd>
             <dd class="break"></dd>
@@ -1655,16 +1663,17 @@ for the requested operation.<a href="#section-4.2.2-2.4.1" class="pilcrow">¶</a
 <code>txn</code>:</dt>
             <dd style="margin-left: 1.5em" id="section-4.2.2-2.12">
               <p id="section-4.2.2-2.12.1">Transaction Identifier claim defined in <span>[<a href="#SET" class="cite xref">SET</a>]</span>. Transaction identifier for the challenged operation.
-The transaction token issued in response to the challenge <span class="bcp14">MUST</span> contain the same transaction identifier. The
+ in response to the challenge <span class="bcp14">MUST</span> contain the same transaction identifier. The
 transaction identifier <span class="bcp14">MUST</span> be unique within the context of the protected resource for the lifetime of the
-challenge and any transaction token issued in response to it.<a href="#section-4.2.2-2.12.1" class="pilcrow">¶</a></p>
+challenge and any access token issued in response to it.<a href="#section-4.2.2-2.12.1" class="pilcrow">¶</a></p>
 </dd>
             <dd class="break"></dd>
 <dt id="section-4.2.2-2.13">
 <code>authorization_details</code>:</dt>
             <dd style="margin-left: 1.5em" id="section-4.2.2-2.14">
               <p id="section-4.2.2-2.14.1">Claim containing Authorization Details as defined in <span>[<a href="#OAUTH-RAR" class="cite xref">OAUTH-RAR</a>]</span>. Structured description of the operation
-for which transaction-specific authorization is requested.<a href="#section-4.2.2-2.14.1" class="pilcrow">¶</a></p>
+for which transaction-specific authorization is requested. The granted authorization details carried by the
+access token issued in response to the challenge are derived from this value.<a href="#section-4.2.2-2.14.1" class="pilcrow">¶</a></p>
 </dd>
             <dd class="break"></dd>
 <dt id="section-4.2.2-2.15">
@@ -1822,7 +1831,7 @@ to the authorization server.<a href="#section-4.5-4" class="pilcrow">¶</a></p>
 <a href="#section-4.6" class="section-number selfRef">4.6. </a><a href="#name-authorization-server-proces" class="section-name selfRef">Authorization Server Processing</a>
         </h3>
 <p id="section-4.6-1">The authorization server <span class="bcp14">MUST</span> validate the transaction authorization challenge before accepting it for processing or
-issuing a transaction token.<a href="#section-4.6-1" class="pilcrow">¶</a></p>
+issuing an access token.<a href="#section-4.6-1" class="pilcrow">¶</a></p>
 <p id="section-4.6-2">At a minimum, the authorization server <span class="bcp14">MUST</span> verify that:<a href="#section-4.6-2" class="pilcrow">¶</a></p>
 <ul class="normal">
 <li class="normal" id="section-4.6-3.1">
@@ -1838,11 +1847,11 @@ issuing a transaction token.<a href="#section-4.6-1" class="pilcrow">¶</a></p>
             <p id="section-4.6-3.4.1">the <code>aud</code> claim identifies the authorization server;<a href="#section-4.6-3.4.1" class="pilcrow">¶</a></p>
 </li>
           <li class="normal" id="section-4.6-3.5">
-            <p id="section-4.6-3.5.1">the authorization server is willing to issue transaction tokens for the protected resource identified by the <code>iss</code>
+            <p id="section-4.6-3.5.1">the authorization server is willing to issue access tokens for the protected resource identified by the <code>iss</code>
 claim and for the requested operation;<a href="#section-4.6-3.5.1" class="pilcrow">¶</a></p>
 </li>
           <li class="normal" id="section-4.6-3.6">
-            <p id="section-4.6-3.6.1">the transaction token issued in response to the challenge will use the protected resource identified by the <code>iss</code> claim
+            <p id="section-4.6-3.6.1">the access token issued in response to the challenge will use the protected resource identified by the <code>iss</code> claim
 as its audience, unless an application profile defines a different audience binding;<a href="#section-4.6-3.6.1" class="pilcrow">¶</a></p>
 </li>
           <li class="normal" id="section-4.6-3.7">
@@ -1860,13 +1869,13 @@ context when determining whether the challenged operation can be approved.<a hre
 <p id="section-4.6-5">The authorization server determines the approving party according to local policy. The approving party can be the subject
 associated with the original request, a different resource owner, an administrator, an organizational approval workflow,
 or another policy authority.<a href="#section-4.6-5" class="pilcrow">¶</a></p>
-<p id="section-4.6-6">The authorization server <span class="bcp14">MUST</span> obtain any required approval before issuing a transaction token. The authorization server
+<p id="section-4.6-6">The authorization server <span class="bcp14">MUST</span> obtain any required approval before issuing an access token. The authorization server
 <span class="bcp14">SHOULD</span> present the approving party with sufficient information to understand the operation being authorized. The
 authorization server <span class="bcp14">MUST NOT</span> rely on an unprotected description supplied by the agent as the basis for the
 authorization decision.<a href="#section-4.6-6" class="pilcrow">¶</a></p>
 <p id="section-4.6-7">If the authorization server accepts the challenge for processing, the client obtains the result using the transaction
 authorization flow described in <a href="#transaction-authorization-flow" class="auto internal xref">Section 5</a>. If the authorization server rejects the challenge,
-cannot validate the challenge, or cannot obtain the required approval, it <span class="bcp14">MUST NOT</span> issue a transaction token for the
+cannot validate the challenge, or cannot obtain the required approval, it <span class="bcp14">MUST NOT</span> issue an access token for the
 challenged operation.<a href="#section-4.6-7" class="pilcrow">¶</a></p>
 </section>
 </div>
@@ -1884,10 +1893,10 @@ the OAuth 2.0 Device Authorization Grant defined in <span>[<a href="#OAUTH-DEVIC
 <p id="section-5-2">Unlike the Device Authorization Grant, this flow does not use a device code, user code, or verification URI. Instead,
 the client submits a signed transaction authorization challenge to the authorization server. If the authorization server
 accepts the challenge for processing, it returns a transaction authorization identifier. The client then polls the transaction
-authorization endpoint with that identifier until the authorization server returns a transaction token or an error.<a href="#section-5-2" class="pilcrow">¶</a></p>
+authorization endpoint with that identifier until the authorization server returns an access token or an error.<a href="#section-5-2" class="pilcrow">¶</a></p>
 <p id="section-5-3">A successful transaction authorization response does not indicate that the challenged operation has been approved.
 It only indicates that the authorization server has accepted the transaction authorization challenge for processing.
-The challenged operation is authorized only when the authorization server issues a transaction token and the protected
+The challenged operation is authorized only when the authorization server issues an access token and the protected
 resource accepts that token for the challenged operation.<a href="#section-5-3" class="pilcrow">¶</a></p>
 <p id="section-5-4">The following figure shows the transaction authorization flow:<a href="#section-5-4" class="pilcrow">¶</a></p>
 <span id="name-transaction-authorization-fl"></span><div id="fig-transaction-authorization-flow">
@@ -1959,7 +1968,7 @@ resource accepts that token for the challenged operation.<a href="#section-5-3" 
                 <text x="136" y="500">Transaction</text>
                 <text x="240" y="500">Authorization</text>
                 <text x="332" y="500">Response</text>
-                <text x="272" y="516">transaction</text>
+                <text x="292" y="516">access</text>
                 <text x="344" y="516">token</text>
               </g>
             </svg><a href="#section-5-5.1.1" class="pilcrow">¶</a>
@@ -1984,7 +1993,7 @@ UTF-8 in the HTTP request entity-body:<a href="#section-5.1-2" class="pilcrow">�
           <dt id="section-5.1-3.1">
 <code>client_id</code>:</dt>
           <dd style="margin-left: 1.5em" id="section-5.1-3.2">
-            <p id="section-5.1-3.2.1"><span class="bcp14">REQUIRED</span> if the client is not authenticating with the authorization server as described in <span><a href="https://datatracker.ietf.org/doc/html/draft-ietf-oauth-v2-31#section-3.2.1" class="relref">Section 3.2.1</a> of [<a href="#OAUTH-FRAMEWORK" class="cite xref">OAUTH-FRAMEWORK</a>]</span>.
+            <p id="section-5.1-3.2.1"><span class="bcp14">REQUIRED</span> if the client is not authenticating with the authorization server as described in <span><a href="https://rfc-editor.org/rfc/rfc6749#section-3.2.1" class="relref">Section 3.2.1</a> of [<a href="#OAUTH-FRAMEWORK" class="cite xref">OAUTH-FRAMEWORK</a>]</span>.
 The client identifier issued to the client during the registration process.<a href="#section-5.1-3.2.1" class="pilcrow">¶</a></p>
 </dd>
           <dd class="break"></dd>
@@ -2014,7 +2023,7 @@ client_id=s6BhdRkqt3
 </div>
 <p id="section-5.1-6">Requests to the transaction authorization endpoint <span class="bcp14">MUST</span> use the Transport Layer Security (TLS) protocol <span>[<a href="#TLS" class="cite xref">TLS</a>]</span>
 and implement the best practices of <span>[<a href="#BCP-195" class="cite xref">BCP-195</a>]</span>.<a href="#section-5.1-6" class="pilcrow">¶</a></p>
-<p id="section-5.1-7">The client authentication requirements of <span><a href="https://datatracker.ietf.org/doc/html/draft-ietf-oauth-v2-31#section-3.2.1" class="relref">Section 3.2.1</a> of [<a href="#OAUTH-FRAMEWORK" class="cite xref">OAUTH-FRAMEWORK</a>]</span> apply to requests on this endpoint, which means
+<p id="section-5.1-7">The client authentication requirements of <span><a href="https://rfc-editor.org/rfc/rfc6749#section-3.2.1" class="relref">Section 3.2.1</a> of [<a href="#OAUTH-FRAMEWORK" class="cite xref">OAUTH-FRAMEWORK</a>]</span> apply to requests on this endpoint, which means
 that confidential clients (those that have established client credentials) authenticate in the same manner as when making requests
 to the token endpoint, and public clients provide the "client_id" parameter to identify themselves.<a href="#section-5.1-7" class="pilcrow">¶</a></p>
 <p id="section-5.1-8">The authorization server <span class="bcp14">MUST</span> validate the transaction authorization challenge as described in <a href="#authorization-server-processing" class="auto internal xref">Section 4.6</a> before
@@ -2027,10 +2036,10 @@ accepting the request for processing.<a href="#section-5.1-8" class="pilcrow">¶
 <a href="#section-5.2" class="section-number selfRef">5.2. </a><a href="#name-transaction-authorization-res" class="section-name selfRef">Transaction Authorization Response</a>
         </h3>
 <p id="section-5.2-1">After receiving a transaction authorization request, the authorization server validates the transaction authorization challenge as
-described in <a href="#authorization-server-processing" class="auto internal xref">Section 4.6</a>. The authorization server then either issues a transaction token, indicates that
+described in <a href="#authorization-server-processing" class="auto internal xref">Section 4.6</a>. The authorization server then either issues an access token, indicates that
 the transaction authorization request is pending, or returns an error response.<a href="#section-5.2-1" class="pilcrow">¶</a></p>
-<p id="section-5.2-2">If the authorization server approves the challenged operation without additional interaction, it returns a transaction token
-response as described in <a href="#successful-transaction-token-response" class="auto internal xref">Section 5.4</a>.<a href="#section-5.2-2" class="pilcrow">¶</a></p>
+<p id="section-5.2-2">If the authorization server approves the challenged operation without additional interaction, it returns an access token
+response as described in <a href="#successful-access-token-response" class="auto internal xref">Section 5.4</a>.<a href="#section-5.2-2" class="pilcrow">¶</a></p>
 <p id="section-5.2-3">If additional interaction or policy evaluation is required, the authorization server returns an HTTP 200 response with an
 <code>application/json</code> body containing the following parameters:<a href="#section-5.2-3" class="pilcrow">¶</a></p>
 <span class="break"></span><dl class="dlParallel" id="section-5.2-4">
@@ -2119,7 +2128,7 @@ format with a character encoding of UTF-8 in the HTTP request entity-body:<a hre
           <dt id="section-5.3-3.1">
 <code>client_id</code>:</dt>
           <dd style="margin-left: 1.5em" id="section-5.3-3.2">
-            <p id="section-5.3-3.2.1"><span class="bcp14">REQUIRED</span> if the client is not authenticating with the authorization server as described in <span><a href="https://datatracker.ietf.org/doc/html/draft-ietf-oauth-v2-31#section-3.2.1" class="relref">Section 3.2.1</a> of [<a href="#OAUTH-FRAMEWORK" class="cite xref">OAUTH-FRAMEWORK</a>]</span>.
+            <p id="section-5.3-3.2.1"><span class="bcp14">REQUIRED</span> if the client is not authenticating with the authorization server as described in <span><a href="https://rfc-editor.org/rfc/rfc6749#section-3.2.1" class="relref">Section 3.2.1</a> of [<a href="#OAUTH-FRAMEWORK" class="cite xref">OAUTH-FRAMEWORK</a>]</span>.
 The client identifier issued to the client during the registration process.<a href="#section-5.3-3.2.1" class="pilcrow">¶</a></p>
 </dd>
           <dd class="break"></dd>
@@ -2177,81 +2186,122 @@ to instruct the client to increase the polling interval. After receiving <code>s
 least 5 seconds.<a href="#section-5.3-11" class="pilcrow">¶</a></p>
 <p id="section-5.3-12">On encountering a connection timeout, clients <span class="bcp14">MUST</span> unilaterally reduce their polling frequency before retrying. The use of an exponential
 backoff algorithm to achieve this, such as doubling the polling interval on each such connection timeout, is <span class="bcp14">RECOMMENDED</span>.<a href="#section-5.3-12" class="pilcrow">¶</a></p>
-<p id="section-5.3-13">If the transaction authorization request is approved, the authorization server returns a transaction token response as described in
-<a href="#successful-transaction-token-response" class="auto internal xref">Section 5.4</a>.<a href="#section-5.3-13" class="pilcrow">¶</a></p>
+<p id="section-5.3-13">If the transaction authorization request is approved, the authorization server returns an access token response as described in
+<a href="#successful-access-token-response" class="auto internal xref">Section 5.4</a>.<a href="#section-5.3-13" class="pilcrow">¶</a></p>
 <p id="section-5.3-14">If the approving party denies the request, the authorization server returns an error response with the <code>access_denied</code> error code.
 If the transaction authorization request has expired, the authorization server returns an error response with the <code>expired_token</code>
 error code, as defined in <span><a href="https://rfc-editor.org/rfc/rfc8628#section-3.5" class="relref">Section 3.5</a> of [<a href="#OAUTH-DEVICE" class="cite xref">OAUTH-DEVICE</a>]</span>.<a href="#section-5.3-14" class="pilcrow">¶</a></p>
 </section>
 </div>
-<div id="successful-transaction-token-response">
+<div id="successful-access-token-response">
 <section id="section-5.4">
-        <h3 id="name-successful-transaction-toke">
-<a href="#section-5.4" class="section-number selfRef">5.4. </a><a href="#name-successful-transaction-toke" class="section-name selfRef">Successful Transaction Token Response</a>
+        <h3 id="name-successful-access-token-res">
+<a href="#section-5.4" class="section-number selfRef">5.4. </a><a href="#name-successful-access-token-res" class="section-name selfRef">Successful Access Token Response</a>
         </h3>
-<p id="section-5.4-1">If the transaction authorization request is approved, the authorization server returns a transaction token response.<a href="#section-5.4-1" class="pilcrow">¶</a></p>
-<p id="section-5.4-2">The transaction token response uses the response format defined by <span>[<a href="#TXN-TOKENS" class="cite xref">TXN-TOKENS</a>]</span>. The transaction token <span class="bcp14">MUST</span> contain the <code>txn</code>
-value from the transaction authorization challenge. The transaction token <span class="bcp14">MUST</span> use the <code>iss</code> value from the transaction authorization
-challenge as its audience unless an application profile defines a different audience binding.<a href="#section-5.4-2" class="pilcrow">¶</a></p>
-<p id="section-5.4-3">For example:<a href="#section-5.4-3" class="pilcrow">¶</a></p>
-<span id="name-successful-transaction-token"></span><div id="fig-transaction-token-response">
+<p id="section-5.4-1">If the transaction authorization request is approved, the authorization server returns an access token response.<a href="#section-5.4-1" class="pilcrow">¶</a></p>
+<p id="section-5.4-2">The response uses the access token response format defined in <span><a href="https://rfc-editor.org/rfc/rfc6749#section-5.1" class="relref">Section 5.1</a> of [<a href="#OAUTH-FRAMEWORK" class="cite xref">OAUTH-FRAMEWORK</a>]</span> and the
+<code>authorization_details</code> response parameter defined in <span><a href="https://rfc-editor.org/rfc/rfc9396#section-7" class="relref">Section 7</a> of [<a href="#OAUTH-RAR" class="cite xref">OAUTH-RAR</a>]</span>. The granted
+<code>authorization_details</code> value <span class="bcp14">MUST</span> describe the operation approved for the challenged transaction and <span class="bcp14">MUST</span>
+be derived from the <code>authorization_details</code> claim of the transaction authorization challenge. The
+authorization server <span class="bcp14">MAY</span> normalize, narrow, or otherwise constrain the granted authorization details
+relative to those requested by the challenge, but <span class="bcp14">MUST NOT</span> broaden them.<a href="#section-5.4-2" class="pilcrow">¶</a></p>
+<p id="section-5.4-3">The authorization_details parameter in the token response is returned by the authorization server as required
+by Section 7 of <span>[<a href="#OAUTH-RAR" class="cite xref">OAUTH-RAR</a>]</span> and conveys the authorization details as granted, which <span class="bcp14">MAY</span> differ from those
+requested in the challenge. This response parameter is informational for the client. The protected resource
+<span class="bcp14">MUST</span> determine authorization from the granted authorization details bound to the access token
+(see <a href="#access-token" class="auto internal xref">Section 6</a>), and <span class="bcp14">MUST NOT</span> rely on the token response parameter.<a href="#section-5.4-3" class="pilcrow">¶</a></p>
+<p id="section-5.4-4">The access token <span class="bcp14">MUST</span> contain the <code>txn</code> value from the transaction authorization challenge, <span class="bcp14">MUST</span> be bound
+to the granted authorization details, and <span class="bcp14">MUST</span> use the <code>iss</code> value from the transaction authorization
+challenge as its audience unless an application profile defines a different audience binding. The
+authorization server <span class="bcp14">MAY</span> issue this access token in any access token format negotiated with the protected
+resource; when JWT access tokens defined in <span>[<a href="#JWT-AT" class="cite xref">JWT-AT</a>]</span> are used, the <code>txn</code> and
+<code>authorization_details</code> claims are included as defined in <span>[<a href="#SET" class="cite xref">SET</a>]</span> and <span><a href="https://rfc-editor.org/rfc/rfc9396#section-9" class="relref">Section 9</a> of [<a href="#OAUTH-RAR" class="cite xref">OAUTH-RAR</a>]</span>
+respectively.<a href="#section-5.4-4" class="pilcrow">¶</a></p>
+<p id="section-5.4-5">The access token issued in response to a transaction authorization challenge is scoped to the challenged
+operation and <span class="bcp14">MUST NOT</span> be accepted as authorization for any operation that is not described by its granted
+authorization details.<a href="#section-5.4-5" class="pilcrow">¶</a></p>
+<p id="section-5.4-6">For example:<a href="#section-5.4-6" class="pilcrow">¶</a></p>
+<span id="name-successful-access-token-resp"></span><div id="fig-access-token-response">
 <figure id="figure-11">
-          <div class="alignLeft art-text artwork" id="section-5.4-4.1">
+          <div class="alignLeft art-text artwork" id="section-5.4-7.1">
 <pre>
 HTTP/1.1 200 OK
 Content-Type: application/json
 Cache-Control: no-store
 
 {
-  "access_token": "eyJhbGciOiJFUzI1NiIsInR4bnRva2VuK2p3dCJ9...",
-  "issued_token_type": "urn:ietf:params:oauth:token-type:txn_token",
-  "token_type": "N_A"
+  "access_token": "eyJhbGciOiJFUzI1NiIsInR5cCI6ImF0K2p3dCJ9...",
+  "token_type": "Bearer",
+  "expires_in": 120,
+  "authorization_details": [
+    {
+      "type": "payment",
+      "actions": ["initiate"],
+      "locations": ["https://payments.example.com/accounts/123"],
+      "instructedAmount": {
+        "currency": "GBP",
+        "amount": "5000.00"
+      },
+      "creditorName": "Example Ltd"
+    }
+  ]
 }
 </pre>
 </div>
 <figcaption><a href="#figure-11" class="selfRef">Figure 11</a>:
-<a href="#name-successful-transaction-token" class="selfRef">Successful transaction token response</a>
+<a href="#name-successful-access-token-resp" class="selfRef">Successful access token response</a>
           </figcaption></figure>
 </div>
+<p id="section-5.4-8">The access token <span class="bcp14">MUST</span> have a limited lifetime. The authorization server <span class="bcp14">SHOULD</span> issue the access token with a short lifetime because it represents
+authorization for a specific operation. Sender-constrained access tokens, for example using DPoP
+(<span>[<a href="#DPOP" class="cite xref">DPOP</a>]</span>) or mutual-TLS (<span>[<a href="#MTLS" class="cite xref">MTLS</a>]</span>), <span class="bcp14">MAY</span> be used and are <span class="bcp14">RECOMMENDED</span> for high-impact
+operations.<a href="#section-5.4-8" class="pilcrow">¶</a></p>
 </section>
 </div>
 </section>
 </div>
-<div id="transaction-token">
+<div id="access-token">
 <section id="section-6">
-      <h2 id="name-transaction-token">
-<a href="#section-6" class="section-number selfRef">6. </a><a href="#name-transaction-token" class="section-name selfRef">Transaction Token</a>
+      <h2 id="name-access-token">
+<a href="#section-6" class="section-number selfRef">6. </a><a href="#name-access-token" class="section-name selfRef">Access Token</a>
       </h2>
-<p id="section-6-1">A transaction token issued in response to a transaction authorization challenge represents authorization for the challenged operation. This
-document profiles the transaction token defined in <span>[<a href="#TXN-TOKENS" class="cite xref">TXN-TOKENS</a>]</span> for use as evidence of transaction-specific authorization.<a href="#section-6-1" class="pilcrow">¶</a></p>
-<p id="section-6-2">The transaction token is issued by the authorization server identified by the <code>aud</code> claim of the transaction authorization challenge and is
+<p id="section-6-1">The access token issued in response to a transaction authorization challenge represents authorization for the challenged operation.
+It is an OAuth 2.0 access token whose granted authorization details, expressed using the <code>authorization_details</code> parameter and claim
+defined in <span>[<a href="#OAUTH-RAR" class="cite xref">OAUTH-RAR</a>]</span>, describe the operation that was approved.<a href="#section-6-1" class="pilcrow">¶</a></p>
+<p id="section-6-2">The access token is issued by the authorization server identified by the <code>aud</code> claim of the transaction authorization challenge and is
 presented to the protected resource that issued the challenge.<a href="#section-6-2" class="pilcrow">¶</a></p>
-<p id="section-6-3">The transaction token <span class="bcp14">MUST</span> contain sufficient information for the protected resource to determine that the token authorizes the challenged
-operation. This information can include the <code>authorization_details</code> claim from the challenge, a reference to protected resource state, or other
-information agreed between the protected resource and authorization server.<a href="#section-6-3" class="pilcrow">¶</a></p>
-<p id="section-6-4">The transaction token <span class="bcp14">MUST</span> have a limited lifetime. The authorization server <span class="bcp14">SHOULD</span> issue transaction tokens with short expiration times because
-they represent authorization for a specific operation.<a href="#section-6-4" class="pilcrow">¶</a></p>
-<p id="section-6-5">When requester context, such as the <code>act</code> claim, is present in the transaction authorization challenge, the authorization server <span class="bcp14">MUST</span> include
-equivalent requester context in the transaction token or otherwise bind the transaction token to that context.<a href="#section-6-5" class="pilcrow">¶</a></p>
+<p id="section-6-3">The access token <span class="bcp14">MUST</span> contain sufficient information for the protected resource to determine that the token authorizes the challenged
+operation. At a minimum, the access token <span class="bcp14">MUST</span> be bound to the <code>txn</code> value from the challenge and <span class="bcp14">MUST</span> carry granted authorization
+details that describe the approved operation. The granted authorization details <span class="bcp14">MAY</span> be the value of the <code>authorization_details</code> claim
+from the challenge, a value derived from it, or a reference to protected resource state agreed between the protected resource and the
+authorization server.<a href="#section-6-3" class="pilcrow">¶</a></p>
+<p id="section-6-4">When requester context, such as the <code>act</code> claim, is present in the transaction authorization challenge, the authorization server <span class="bcp14">MUST</span>
+include equivalent requester context in the access token or otherwise bind the access token to that context.<a href="#section-6-4" class="pilcrow">¶</a></p>
+<p id="section-6-5">This access token is scoped to the challenged operation. Clients and protected resources <span class="bcp14">MUST NOT</span> assume that the
+access token issued in response to a transaction authorization challenge confers authorization beyond the operation described by its
+granted authorization details.<a href="#section-6-5" class="pilcrow">¶</a></p>
 <div id="token-presentation">
 <section id="section-6.1">
         <h3 id="name-token-presentation">
 <a href="#section-6.1" class="section-number selfRef">6.1. </a><a href="#name-token-presentation" class="section-name selfRef">Token Presentation</a>
         </h3>
-<p id="section-6.1-1">The client provides the transaction token to the agent. The agent presents the transaction token to the protected resource
-together with the request for the challenged operation.<a href="#section-6.1-1" class="pilcrow">¶</a></p>
-<p id="section-6.1-2">In deployments where one agent delegates work to another agent, the transaction token <span class="bcp14">MAY</span> be relayed through one or more intermediate agents
-before being presented to the protected resource. Each agent that relays the transaction token <span class="bcp14">MUST</span> relay it without modification. An agent <span class="bcp14">MUST NOT</span> use the transaction token for a different transaction, different protected resource, or different requester context.<a href="#section-6.1-2" class="pilcrow">¶</a></p>
-<p id="section-6.1-3">When HTTP is used, the transaction token <span class="bcp14">MUST</span> be presented using the <code>Txn-Token</code> header field defined by <span>[<a href="#TXN-TOKENS" class="cite xref">TXN-TOKENS</a>]</span>.<a href="#section-6.1-3" class="pilcrow">¶</a></p>
+<p id="section-6.1-1">The client provides the access token to the agent. The agent presents the access token to the protected resource together with the
+request for the challenged operation.<a href="#section-6.1-1" class="pilcrow">¶</a></p>
+<p id="section-6.1-2">In deployments where one agent delegates work to another agent, the access token <span class="bcp14">MAY</span> be relayed through one or more intermediate agents
+before being presented to the protected resource. Each agent that relays the access token <span class="bcp14">MUST</span> relay it without modification. An agent
+<span class="bcp14">MUST NOT</span> use the access token for a different transaction, different protected resource, or different requester context.<a href="#section-6.1-2" class="pilcrow">¶</a></p>
+<p id="section-6.1-3">When HTTP is used, the access token <span class="bcp14">MUST</span> be presented to the protected resource as defined by <span>[<a href="#OAUTH-FRAMEWORK" class="cite xref">OAUTH-FRAMEWORK</a>]</span>. Bearer access
+tokens are presented using the <code>Authorization</code> request header field as specified in <span>[<a href="#BEARER" class="cite xref">BEARER</a>]</span>. Sender-constrained access
+tokens are presented using the mechanism defined by the corresponding access token format, for example <span>[<a href="#DPOP" class="cite xref">DPOP</a>]</span> or
+<span>[<a href="#MTLS" class="cite xref">MTLS</a>]</span>.<a href="#section-6.1-3" class="pilcrow">¶</a></p>
 <p id="section-6.1-4">For example:<a href="#section-6.1-4" class="pilcrow">¶</a></p>
-<span id="name-presenting-a-transaction-to"></span><div id="fig-transaction-token-presentation">
+<span id="name-presenting-the-access-token"></span><div id="fig-access-token-presentation">
 <figure id="figure-12">
           <div class="alignLeft art-text artwork" id="section-6.1-5.1">
 <pre>
 POST /payments HTTP/1.1
 Host: resource.example.com
-Authorization: Bearer mF_9.B5f-4.1JqM
-Txn-Token: eyJhbGciOiJFUzI1NiIsInR5cCI6InR4bnRva2VuK2p3dCJ9...
+Authorization: Bearer eyJhbGciOiJFUzI1NiIsInR5cCI6ImF0K2p3dCJ9...
 Content-Type: application/json
 
 {
@@ -2262,11 +2312,11 @@ Content-Type: application/json
 </pre>
 </div>
 <figcaption><a href="#figure-12" class="selfRef">Figure 12</a>:
-<a href="#name-presenting-a-transaction-to" class="selfRef">Presenting a transaction token to a protected resource</a>
+<a href="#name-presenting-the-access-token" class="selfRef">Presenting the access token to a protected resource</a>
           </figcaption></figure>
 </div>
-<p id="section-6.1-6">The agent <span class="bcp14">MUST NOT</span> modify the transaction token. If the agent cannot present the transaction token to the protected resource,
-the challenged operation cannot be completed using this mechanism.<a href="#section-6.1-6" class="pilcrow">¶</a></p>
+<p id="section-6.1-6">The agent <span class="bcp14">MUST NOT</span> modify the access token. If the agent cannot present the access token to the protected resource, the challenged
+operation cannot be completed using this mechanism.<a href="#section-6.1-6" class="pilcrow">¶</a></p>
 </section>
 </div>
 <div id="protected-resource-validation">
@@ -2274,38 +2324,42 @@ the challenged operation cannot be completed using this mechanism.<a href="#sect
         <h3 id="name-protected-resource-validati">
 <a href="#section-6.2" class="section-number selfRef">6.2. </a><a href="#name-protected-resource-validati" class="section-name selfRef">Protected Resource Validation</a>
         </h3>
-<p id="section-6.2-1">Before accepting a transaction token as authorization for a challenged operation, the protected resource <span class="bcp14">MUST</span> validate the
-transaction token according to <span>[<a href="#TXN-TOKENS" class="cite xref">TXN-TOKENS</a>]</span> and the requirements of this document.<a href="#section-6.2-1" class="pilcrow">¶</a></p>
+<p id="section-6.2-1">Before accepting the access token as authorization for a challenged operation, the protected resource <span class="bcp14">MUST</span> validate the access token
+according to <span>[<a href="#OAUTH-FRAMEWORK" class="cite xref">OAUTH-FRAMEWORK</a>]</span>, the access token format in use, and the requirements of this document.<a href="#section-6.2-1" class="pilcrow">¶</a></p>
 <p id="section-6.2-2">At a minimum, the protected resource <span class="bcp14">MUST</span> verify that:<a href="#section-6.2-2" class="pilcrow">¶</a></p>
 <ul class="normal">
 <li class="normal" id="section-6.2-3.1">
-            <p id="section-6.2-3.1.1">the transaction token was issued by the authorization server identified by the <code>aud</code> claim of the transaction authorization challenge;<a href="#section-6.2-3.1.1" class="pilcrow">¶</a></p>
+            <p id="section-6.2-3.1.1">the access token was issued by the authorization server identified by the <code>aud</code> claim of the transaction authorization challenge;<a href="#section-6.2-3.1.1" class="pilcrow">¶</a></p>
 </li>
           <li class="normal" id="section-6.2-3.2">
-            <p id="section-6.2-3.2.1">the transaction token audience identifies the protected resource, unless an application profile defines a different audience binding;<a href="#section-6.2-3.2.1" class="pilcrow">¶</a></p>
+            <p id="section-6.2-3.2.1">the access token audience identifies the protected resource, unless an application profile defines a different audience binding;<a href="#section-6.2-3.2.1" class="pilcrow">¶</a></p>
 </li>
           <li class="normal" id="section-6.2-3.3">
-            <p id="section-6.2-3.3.1">the transaction token has not expired;<a href="#section-6.2-3.3.1" class="pilcrow">¶</a></p>
+            <p id="section-6.2-3.3.1">the access token has not expired;<a href="#section-6.2-3.3.1" class="pilcrow">¶</a></p>
 </li>
           <li class="normal" id="section-6.2-3.4">
-            <p id="section-6.2-3.4.1">the transaction token contains the same <code>txn</code> value as the transaction authorization challenge;<a href="#section-6.2-3.4.1" class="pilcrow">¶</a></p>
+            <p id="section-6.2-3.4.1">the access token is bound to the same <code>txn</code> value as the transaction authorization challenge;<a href="#section-6.2-3.4.1" class="pilcrow">¶</a></p>
 </li>
           <li class="normal" id="section-6.2-3.5">
-            <p id="section-6.2-3.5.1">the transaction token authorizes the requested operation;<a href="#section-6.2-3.5.1" class="pilcrow">¶</a></p>
+            <p id="section-6.2-3.5.1">the granted authorization details associated with the access token authorize the requested operation and are consistent with the
+<code>authorization_details</code> claim of the transaction authorization challenge;<a href="#section-6.2-3.5.1" class="pilcrow">¶</a></p>
 </li>
           <li class="normal" id="section-6.2-3.6">
             <p id="section-6.2-3.6.1">any requester context required by the transaction authorization challenge is present and matches the challenged transaction;<a href="#section-6.2-3.6.1" class="pilcrow">¶</a></p>
 </li>
           <li class="normal" id="section-6.2-3.7">
-            <p id="section-6.2-3.7.1">the transaction token has not previously been used, if the protected resource requires single-use transaction tokens.<a href="#section-6.2-3.7.1" class="pilcrow">¶</a></p>
+            <p id="section-6.2-3.7.1">the access token has not previously been used, if the protected resource requires single-use access tokens for the challenged operation.<a href="#section-6.2-3.7.1" class="pilcrow">¶</a></p>
 </li>
         </ul>
-<p id="section-6.2-4">A protected resource <span class="bcp14">MUST</span> reject a transaction token that does not correspond to the transaction authorization challenge for the requested
+<p id="section-6.2-4">A protected resource <span class="bcp14">MUST</span> reject an access token that does not correspond to the transaction authorization challenge for the requested
 operation.<a href="#section-6.2-4" class="pilcrow">¶</a></p>
-<p id="section-6.2-5">A protected resource <span class="bcp14">SHOULD</span> treat transaction tokens as single-use when the challenged operation is non-idempotent or high impact.
-If single-use semantics are required, the protected resource <span class="bcp14">MUST</span> maintain sufficient state to detect replay of the transaction
-token or transaction identifier.<a href="#section-6.2-5" class="pilcrow">¶</a></p>
-<p id="section-6.2-6">The protected resource <span class="bcp14">MUST NOT</span> accept a transaction token as general authorization for operations other than the challenged operation.<a href="#section-6.2-6" class="pilcrow">¶</a></p>
+<p id="section-6.2-5">A protected resource <span class="bcp14">SHOULD</span> treat access tokens issued in response to a transaction authorization challenge as single-use when the
+challenged operation is non-idempotent or high impact. If single-use semantics are required, the protected resource <span class="bcp14">MUST</span> maintain
+sufficient state to detect replay of the access token or transaction identifier.<a href="#section-6.2-5" class="pilcrow">¶</a></p>
+<p id="section-6.2-6">The protected resource <span class="bcp14">MUST NOT</span> accept an access token issued in response to a transaction authorization challenge as general
+authorization for operations other than the challenged operation. In particular, the protected resource <span class="bcp14">MUST NOT</span> honour the granted
+authorization details of such an access token for any operation that is not the challenged operation described by those authorization
+details.<a href="#section-6.2-6" class="pilcrow">¶</a></p>
 </section>
 </div>
 </section>
@@ -2315,45 +2369,52 @@ token or transaction identifier.<a href="#section-6.2-5" class="pilcrow">¶</a><
       <h2 id="name-security-considerations">
 <a href="#section-7" class="section-number selfRef">7. </a><a href="#name-security-considerations" class="section-name selfRef">Security Considerations</a>
       </h2>
-<p id="section-7-1">Transaction authorization challenges and transaction tokens are security-sensitive artifacts. A transaction
-authorization challenge requests authorization for a specific operation, and a transaction token represents evidence
-that the challenged operation was authorized. Implementations need to ensure that these artifacts cannot be modified,
-replayed, substituted, or used for a different operation.<a href="#section-7-1" class="pilcrow">¶</a></p>
+<p id="section-7-1">Transaction authorization challenges and the access tokens issued in response to them are security-sensitive
+artifacts. A transaction authorization challenge requests authorization for a specific operation, and the
+access token issued in response represents evidence that the challenged operation was authorized. Implementations
+need to ensure that these artifacts cannot be modified, replayed, substituted, or used for a different operation.<a href="#section-7-1" class="pilcrow">¶</a></p>
 <p id="section-7-2">A protected resource <span class="bcp14">MUST</span> sign each transaction authorization challenge using an asymmetric signing key. Clients and
 authorization servers <span class="bcp14">MUST</span> validate the challenge signature before using any claim from the challenge for display,
 policy evaluation, or authorization decisions. If a challenge cannot be validated, it <span class="bcp14">MUST NOT</span> be treated as
 authentic.<a href="#section-7-2" class="pilcrow">¶</a></p>
 <p id="section-7-3">The authorization server <span class="bcp14">MUST</span> verify that the <code>aud</code> claim identifies the authorization server and that the protected
 resource identified by the <code>iss</code> claim is trusted to request transaction authorization for the requested operation. An
-authorization server <span class="bcp14">MUST NOT</span> issue a transaction token for a challenge issued by an unrecognized or unauthorized
+authorization server <span class="bcp14">MUST NOT</span> issue an access token for a challenge issued by an unrecognized or unauthorized
 protected resource.<a href="#section-7-3" class="pilcrow">¶</a></p>
-<p id="section-7-4">The transaction authorization challenge and the resulting transaction token <span class="bcp14">MUST</span> be bound to the same transaction
-identifier. The protected resource <span class="bcp14">MUST</span> verify that the <code>txn</code> value in the transaction token matches the <code>txn</code> value
-from the challenge. A transaction token <span class="bcp14">MUST NOT</span> be accepted as authorization for any operation other than the
-challenged operation.<a href="#section-7-4" class="pilcrow">¶</a></p>
-<p id="section-7-5">Transaction tokens can be replayed if they are not sufficiently constrained. Authorization servers <span class="bcp14">MUST</span> issue
-transaction tokens with short lifetimes. Protected resources <span class="bcp14">SHOULD</span> treat transaction tokens as single-use for
-non-idempotent or high-impact operations, and maintain sufficient state to detect replay where single-use semantics
-are required.<a href="#section-7-5" class="pilcrow">¶</a></p>
-<p id="section-7-6">The agent is not trusted to modify or summarize the challenge. Clients and authorization servers <span class="bcp14">MUST NOT</span> rely on an
+<p id="section-7-4">The transaction authorization challenge and the resulting access token <span class="bcp14">MUST</span> be bound to the same transaction
+identifier. The protected resource <span class="bcp14">MUST</span> verify that the <code>txn</code> value bound to the access token matches the <code>txn</code>
+value from the challenge. An access token issued in response to a transaction authorization challenge <span class="bcp14">MUST NOT</span> be
+accepted as authorization for any operation other than the challenged operation.<a href="#section-7-4" class="pilcrow">¶</a></p>
+<p id="section-7-5">Access tokens issued in response to a transaction authorization challenge can be replayed if they are not
+sufficiently constrained. Authorization servers <span class="bcp14">MUST</span> issue these access tokens with short lifetimes and <span class="bcp14">SHOULD</span>
+issue them as sender-constrained access tokens, for example using DPoP (<span>[<a href="#DPOP" class="cite xref">DPOP</a>]</span>) or mutual-TLS (<span>[<a href="#MTLS" class="cite xref">MTLS</a>]</span>), for
+high-impact operations. Protected resources <span class="bcp14">SHOULD</span> treat these access tokens as single-use for non-idempotent or
+high-impact operations, and maintain sufficient state to detect replay where single-use semantics are required.<a href="#section-7-5" class="pilcrow">¶</a></p>
+<p id="section-7-6">Because the access token issued in response to a transaction authorization challenge carries granted
+authorization details that describe a specific operation, protected resources <span class="bcp14">MUST</span> evaluate those authorization
+details against the operation being requested. Accepting such an access token without evaluating its
+authorization details would allow a token issued for one operation to authorize a different operation.<a href="#section-7-6" class="pilcrow">¶</a></p>
+<p id="section-7-7">The agent is not trusted to modify or summarize the challenge. Clients and authorization servers <span class="bcp14">MUST NOT</span> rely on an
 unprotected description supplied by the agent as the basis for user display, policy evaluation, or authorization
 decisions. Information presented to the user or approving party <span class="bcp14">SHOULD</span> be derived from the validated challenge, from
 protected resource state identified by the challenge, or from information otherwise authenticated and bound to the
-challenge.<a href="#section-7-6" class="pilcrow">¶</a></p>
-<p id="section-7-7">When requester context is relevant to the authorization decision, the protected resource <span class="bcp14">SHOULD</span> include that context
+challenge.<a href="#section-7-7" class="pilcrow">¶</a></p>
+<p id="section-7-8">When requester context is relevant to the authorization decision, the protected resource <span class="bcp14">SHOULD</span> include that context
 in the challenge, for example using the <code>act</code> claim. The authorization server <span class="bcp14">MUST</span> consider requester context when it
 is present. This helps prevent an approval obtained for one agent, client, user, or delegation context from being used
-to authorize a transaction initiated by another requester.<a href="#section-7-7" class="pilcrow">¶</a></p>
-<p id="section-7-8">The client can inspect the challenge before presenting it to the authorization server. This is important because the
+to authorize a transaction initiated by another requester.<a href="#section-7-8" class="pilcrow">¶</a></p>
+<p id="section-7-9">The client can inspect the challenge before presenting it to the authorization server. This is important because the
 challenge can contain sensitive information about the requested operation, user intent, protected resources, or
 organizational policy. Clients <span class="bcp14">SHOULD</span> allow the user to decline before disclosing the challenge to the authorization
-server when the challenge contains privacy-sensitive transaction details.<a href="#section-7-8" class="pilcrow">¶</a></p>
-<p id="section-7-9">Challenges and transaction tokens can reveal sensitive information if logged or exposed to unintended parties.
-Implementations <span class="bcp14">SHOULD</span> minimize the information included in challenges and transaction tokens, avoid logging them
-unless necessary, and protect them in transit and at rest.<a href="#section-7-9" class="pilcrow">¶</a></p>
-<p id="section-7-10">Application profiles that define additional challenge claims, request binding mechanisms, or alternative audience
+server when the challenge contains privacy-sensitive transaction details.<a href="#section-7-9" class="pilcrow">¶</a></p>
+<p id="section-7-10">Challenges and the access tokens issued in response to them can reveal sensitive information if logged or exposed
+to unintended parties. In particular, the granted authorization details carried by the access token can describe
+the operation in detail. Implementations <span class="bcp14">SHOULD</span> minimize the information included in challenges and in the
+granted authorization details of the access token, avoid logging them unless necessary, and protect them in
+transit and at rest.<a href="#section-7-10" class="pilcrow">¶</a></p>
+<p id="section-7-11">Application profiles that define additional challenge claims, request binding mechanisms, or alternative audience
 bindings <span class="bcp14">MUST</span> describe how those extensions preserve challenge integrity, prevent replay and substitution, and avoid
-confused-deputy attacks.<a href="#section-7-10" class="pilcrow">¶</a></p>
+confused-deputy attacks.<a href="#section-7-11" class="pilcrow">¶</a></p>
 </section>
 </div>
 <div id="iana-considerations">
@@ -2640,7 +2701,7 @@ Metadata parameters, one OAuth Authorization Server Metadata Parameter and two J
 <dd class="break"></dd>
 <dt id="OAUTH-FRAMEWORK">[OAUTH-FRAMEWORK]</dt>
         <dd>
-<span class="refAuthor">Hardt, D.</span>, <span class="refTitle">"The OAuth 2.0 Authorization Framework"</span>, <span class="refContent">Work in Progress</span>, <span class="seriesInfo">Internet-Draft, draft-ietf-oauth-v2-31</span>, <time datetime="2012-08-01" class="refDate">1 August 2012</time>, <span>&lt;<a href="https://datatracker.ietf.org/doc/html/draft-ietf-oauth-v2-31">https://datatracker.ietf.org/doc/html/draft-ietf-oauth-v2-31</a>&gt;</span>. </dd>
+<span class="refAuthor">Hardt, D., Ed.</span>, <span class="refTitle">"The OAuth 2.0 Authorization Framework"</span>, <span class="seriesInfo">RFC 6749</span>, <span class="seriesInfo">DOI 10.17487/RFC6749</span>, <time datetime="2012-10" class="refDate">October 2012</time>, <span>&lt;<a href="https://www.rfc-editor.org/rfc/rfc6749">https://www.rfc-editor.org/rfc/rfc6749</a>&gt;</span>. </dd>
 <dd class="break"></dd>
 <dt id="OAUTH-PROT-METADATA">[OAUTH-PROT-METADATA]</dt>
         <dd>
@@ -2667,12 +2728,8 @@ Metadata parameters, one OAuth Authorization Server Metadata Parameter and two J
 <span class="refAuthor">Hunt, P., Ed.</span>, <span class="refAuthor">Jones, M.</span>, <span class="refAuthor">Denniss, W.</span>, and <span class="refAuthor">M. Ansari</span>, <span class="refTitle">"Security Event Token (SET)"</span>, <span class="seriesInfo">RFC 8417</span>, <span class="seriesInfo">DOI 10.17487/RFC8417</span>, <time datetime="2018-07" class="refDate">July 2018</time>, <span>&lt;<a href="https://www.rfc-editor.org/rfc/rfc8417">https://www.rfc-editor.org/rfc/rfc8417</a>&gt;</span>. </dd>
 <dd class="break"></dd>
 <dt id="STRUCTURED-FIELDS">[STRUCTURED-FIELDS]</dt>
-        <dd>
-<span class="refAuthor">Nottingham, M.</span> and <span class="refAuthor">P. Kamp</span>, <span class="refTitle">"Structured Field Values for HTTP"</span>, <span class="seriesInfo">RFC 9651</span>, <span class="seriesInfo">DOI 10.17487/RFC9651</span>, <time datetime="2024-09" class="refDate">September 2024</time>, <span>&lt;<a href="https://www.rfc-editor.org/rfc/rfc9651">https://www.rfc-editor.org/rfc/rfc9651</a>&gt;</span>. </dd>
-<dd class="break"></dd>
-<dt id="TXN-TOKENS">[TXN-TOKENS]</dt>
       <dd>
-<span class="refAuthor">Tulshibagwale, A.</span>, <span class="refAuthor">Fletcher, G.</span>, and <span class="refAuthor">P. Kasselman</span>, <span class="refTitle">"Transaction Tokens"</span>, <span class="refContent">Work in Progress</span>, <span class="seriesInfo">Internet-Draft, draft-ietf-oauth-transaction-tokens-08</span>, <time datetime="2026-03-02" class="refDate">2 March 2026</time>, <span>&lt;<a href="https://datatracker.ietf.org/doc/html/draft-ietf-oauth-transaction-tokens-08">https://datatracker.ietf.org/doc/html/draft-ietf-oauth-transaction-tokens-08</a>&gt;</span>. </dd>
+<span class="refAuthor">Nottingham, M.</span> and <span class="refAuthor">P. Kamp</span>, <span class="refTitle">"Structured Field Values for HTTP"</span>, <span class="seriesInfo">RFC 9651</span>, <span class="seriesInfo">DOI 10.17487/RFC9651</span>, <time datetime="2024-09" class="refDate">September 2024</time>, <span>&lt;<a href="https://www.rfc-editor.org/rfc/rfc9651">https://www.rfc-editor.org/rfc/rfc9651</a>&gt;</span>. </dd>
 <dd class="break"></dd>
 </dl>
 </section>
@@ -2683,6 +2740,14 @@ Metadata parameters, one OAuth Authorization Server Metadata Parameter and two J
 <a href="#section-9.2" class="section-number selfRef">9.2. </a><a href="#name-informative-references" class="section-name selfRef">Informative References</a>
         </h3>
 <dl class="references">
+<dt id="BEARER">[BEARER]</dt>
+        <dd>
+<span class="refAuthor">Jones, M.</span> and <span class="refAuthor">D. Hardt</span>, <span class="refTitle">"The OAuth 2.0 Authorization Framework: Bearer Token Usage"</span>, <span class="seriesInfo">RFC 6750</span>, <span class="seriesInfo">DOI 10.17487/RFC6750</span>, <time datetime="2012-10" class="refDate">October 2012</time>, <span>&lt;<a href="https://www.rfc-editor.org/rfc/rfc6750">https://www.rfc-editor.org/rfc/rfc6750</a>&gt;</span>. </dd>
+<dd class="break"></dd>
+<dt id="DPOP">[DPOP]</dt>
+        <dd>
+<span class="refAuthor">Fett, D.</span>, <span class="refAuthor">Campbell, B.</span>, <span class="refAuthor">Bradley, J.</span>, <span class="refAuthor">Lodderstedt, T.</span>, <span class="refAuthor">Jones, M.</span>, and <span class="refAuthor">D. Waite</span>, <span class="refTitle">"OAuth 2.0 Demonstrating Proof of Possession (DPoP)"</span>, <span class="seriesInfo">RFC 9449</span>, <span class="seriesInfo">DOI 10.17487/RFC9449</span>, <time datetime="2023-09" class="refDate">September 2023</time>, <span>&lt;<a href="https://www.rfc-editor.org/rfc/rfc9449">https://www.rfc-editor.org/rfc/rfc9449</a>&gt;</span>. </dd>
+<dd class="break"></dd>
 <dt id="IANA.HTTP.FieldNames">[IANA.HTTP.FieldNames]</dt>
         <dd>
 <span class="refTitle">"Hypertext Transfer Protocol (HTTP) Field Name Registry"</span>, <span>n.d.</span>, <span>&lt;<a href="https://www.iana.org/assignments/http-fields/">https://www.iana.org/assignments/http-fields/</a>&gt;</span>. </dd>
@@ -2694,6 +2759,14 @@ Metadata parameters, one OAuth Authorization Server Metadata Parameter and two J
 <dt id="IANA.OAuth.Parameters">[IANA.OAuth.Parameters]</dt>
         <dd>
 <span class="refTitle">"OAuth Parameters"</span>, <span>n.d.</span>, <span>&lt;<a href="https://www.iana.org/assignments/oauth-parameters/">https://www.iana.org/assignments/oauth-parameters/</a>&gt;</span>. </dd>
+<dd class="break"></dd>
+<dt id="JWT-AT">[JWT-AT]</dt>
+        <dd>
+<span class="refAuthor">Bertocci, V.</span>, <span class="refTitle">"JSON Web Token (JWT) Profile for OAuth 2.0 Access Tokens"</span>, <span class="seriesInfo">RFC 9068</span>, <span class="seriesInfo">DOI 10.17487/RFC9068</span>, <time datetime="2021-10" class="refDate">October 2021</time>, <span>&lt;<a href="https://www.rfc-editor.org/rfc/rfc9068">https://www.rfc-editor.org/rfc/rfc9068</a>&gt;</span>. </dd>
+<dd class="break"></dd>
+<dt id="MTLS">[MTLS]</dt>
+        <dd>
+<span class="refAuthor">Campbell, B.</span>, <span class="refAuthor">Bradley, J.</span>, <span class="refAuthor">Sakimura, N.</span>, and <span class="refAuthor">T. Lodderstedt</span>, <span class="refTitle">"OAuth 2.0 Mutual-TLS Client Authentication and Certificate-Bound Access Tokens"</span>, <span class="seriesInfo">RFC 8705</span>, <span class="seriesInfo">DOI 10.17487/RFC8705</span>, <time datetime="2020-02" class="refDate">February 2020</time>, <span>&lt;<a href="https://www.rfc-editor.org/rfc/rfc8705">https://www.rfc-editor.org/rfc/rfc8705</a>&gt;</span>. </dd>
 <dd class="break"></dd>
 <dt id="OAUTH-STEP-UP">[OAUTH-STEP-UP]</dt>
         <dd>
