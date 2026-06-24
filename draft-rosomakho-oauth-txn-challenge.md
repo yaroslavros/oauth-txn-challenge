@@ -331,7 +331,7 @@ A transaction authorization challenge MUST contain the following claims:
 
 `txn`:
 : Transaction Identifier claim defined in {{!SET=RFC8417}}. Transaction identifier for the challenged operation.
-  The access token issued in response to the challenge MUST contain the same transaction identifier. The
+   in response to the challenge MUST contain the same transaction identifier. The
   transaction identifier MUST be unique within the context of the protected resource for the lifetime of the
   challenge and any access token issued in response to it.
 
@@ -737,6 +737,12 @@ The response uses the access token response format defined in {{Section 5.1 of O
 be derived from the `authorization_details` claim of the transaction authorization challenge. The
 authorization server MAY normalize, narrow, or otherwise constrain the granted authorization details
 relative to those requested by the challenge, but MUST NOT broaden them.
+
+The authorization_details parameter in the token response is returned by the authorization server as required
+by Section 7 of {{OAUTH-RAR}} and conveys the authorization details as granted, which MAY differ from those
+requested in the challenge. This response parameter is informational for the client. The protected resource
+MUST determine authorization from the granted authorization details bound to the access token
+(see {{access-token}}), and MUST NOT rely on the token response parameter.
 
 The access token MUST contain the `txn` value from the transaction authorization challenge, MUST be bound
 to the granted authorization details, and MUST use the `iss` value from the transaction authorization
