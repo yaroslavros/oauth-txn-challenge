@@ -4,8 +4,10 @@
 
 Web Authorization Protocol                                  Y. Rosomakho
 Internet-Draft                                                   Zscaler
-Intended status: Standards Track                            P. Kasselman
-Expires: 26 December 2026                               Defakto Security
+Intended status: Standards Track                           K. McGuinness
+Expires: 26 December 2026                                    Independent
+                                                            P. Kasselman
+                                                        Defakto Security
                                                             24 June 2026
 
 
@@ -1466,6 +1468,11 @@ Authors' Addresses
    Yaroslav Rosomakho
    Zscaler
    Email: yrosomakho@zscaler.com
+
+
+   Karl McGuinness
+   Independent
+   Email: public@karlmcguinness.com
 
 
    Pieter Kasselman
