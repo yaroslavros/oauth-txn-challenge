@@ -60,14 +60,15 @@ returning a transaction authorization challenge. This is useful when requests ar
 agents, automated workflows, or delegated services and the protected resource requires
 confirmation from a human user, resource owner, or organizational authority. The client
 presents the challenge to an authorization server, which validates the challenge, obtains
-any required approval, and issues a transaction token. The transaction token is then
+any required approval, and issues an OAuth 2.0 access token whose granted authorization details, expressed
+using Rich Authorization Requests, describe the approved operation. The access token is then
 presented to the protected resource as evidence that the challenged operation was authorized.
 
 --- middle
 
 # Introduction
 
-OAuth 2.1 ({{!OAUTH-FRAMEWORK=I-D.ietf-oauth-v2}}) access tokens authorize access to protected
+OAuth 2.0 ({{!OAUTH-FRAMEWORK=RFC6749}}) access tokens authorize access to protected
 resources. In many deployments, however, a protected resource cannot determine whether a
 requested operation is acceptable based only on the access token that accompanies the request.
 The access token might establish that the caller is authorized to interact with the protected
@@ -82,9 +83,13 @@ an administrator, manager, data owner, or policy decision point.
 This document defines a transaction authorization challenge. A protected resource uses this
 challenge to request additional authorization for a specific operation. The challenge is
 relayed to a client, which presents it to an authorization server. The authorization server
-validates the challenge, obtains any required approval, and issues a transaction token as
-specified by {{!TXN-TOKENS=I-D.ietf-oauth-transaction-tokens}}. The transaction token is then
-presented to the protected resource as evidence that the challenged operation was authorized.
+validates the challenge, obtains any required approval, and issues an OAuth 2.0 access token
+whose granted authorization details, expressed using Rich Authorization Requests
+({{!OAUTH-RAR=RFC9396}}), describe the approved operation and bind the access token to the
+challenged transaction. The access token is then presented to the protected resource as
+evidence that the challenged operation was authorized. Reusing the OAuth 2.0 access token
+abstraction avoids defining a new bearer artifact and allows existing access-token validation
+and protection mechanisms, including sender-constrained access tokens, to apply unchanged.
 
 This mechanism is complementary to OAuth step-up authentication defined in {{?OAUTH-STEP-UP=RFC9470}}.
 Step-up authentication enables a protected resource to require stronger or fresher authentication
@@ -102,7 +107,7 @@ data, modifying access policy, or disclosing sensitive information.
 Local confirmation mechanisms within an agent framework can reduce risk, but they are not always
 visible to the protected resource and do not necessarily produce authorization evidence that the
 protected resource can validate. A transaction authorization challenge allows the protected resource
-to require explicit authorization for the concrete operation and to receive a transaction token
+to require explicit authorization for the concrete operation and to receive an access token
 representing that authorization.
 
 ## Authorization by a Different Resource Owner
@@ -115,7 +120,7 @@ can proceed.
 
 In this case, the transaction authorization challenge allows the protected resource to describe the
 requested operation and the authorization server to determine the appropriate approving party. The
-resulting transaction token represents authorization of the challenged operation by the party
+resulting access token represents authorization of the challenged operation by the party
 selected according to authorization server policy.
 
 ## Organizational Approval
@@ -126,7 +131,7 @@ granting elevated administrative access, or permitting data transfer to an exter
 
 A transaction authorization challenge allows the protected resource to request authorization evidence from
 an authorization server or associated policy infrastructure. The authorization server validates the challenge,
-applies organizational policy, obtains any required approval, and issues a transaction token only when the
+applies organizational policy, obtains any required approval, and issues an access token only when the
 required authorization has been obtained.
 
 # Conventions and Definitions
@@ -136,7 +141,7 @@ required authorization has been obtained.
 This document uses the terms "client", "authorization server", "access token", "refresh token", and "protected
 resource" as defined by {{OAUTH-FRAMEWORK}}.
 
-This document uses the term "transaction token" as defined by {{TXN-TOKENS}}.
+This document uses the term "authorization details" as defined by {{OAUTH-RAR}}.
 
 This document defines the following additional terms:
 
@@ -162,9 +167,9 @@ with the request is sufficient. If the protected resource determines that the re
 transaction-specific authorization, it returns a transaction authorization challenge.
 
 The agent is the component that attempted the operation at the protected resource. The agent relays
-the transaction authorization challenge to the client and later presents the resulting transaction token
+the transaction authorization challenge to the client and later presents the resulting access token
 to the protected resource. The agent is not trusted to modify the contents of the challenge or the resulting
-transaction token.
+access token.
 
 The client receives the transaction authorization challenge from the agent and presents it to the authorization
 server. The client is responsible for mediating the interaction between the agent-facing environment and the
@@ -172,9 +177,10 @@ authorization server. The client does not need to interpret all application-spec
 transaction, but it MUST preserve the integrity of the challenge when presenting it to the authorization server.
 
 The authorization server validates the transaction authorization challenge, determines the approving party,
-obtains any required approval, and issues a transaction token. The authorization server can use local
-policy, resource metadata, resource-owner information, organizational policy, or other authorization context
-to determine whether the requested operation can be approved.
+obtains any required approval, and issues an access token whose granted authorization details describe the
+approved operation. The authorization server can use local policy, resource metadata, resource-owner
+information, organizational policy, or other authorization context to determine whether the requested operation
+can be approved.
 
 The approving party is the human user, resource owner, organizational authority, or policy authority whose
 approval is required. The approving party can be the same subject on whose behalf the agent is acting, but
@@ -215,21 +221,22 @@ The flow is as follows:
 
 1. The authorization server validates the challenge, determines the approving party, and obtains any required approval.
 
-1. The authorization server issues a transaction token to the client.
+1. The authorization server issues an access token to the client. The access token's granted authorization
+   details describe the approved operation, and the access token is bound to the challenged transaction.
 
-1. The client provides the transaction token to the agent.
+1. The client provides the access token to the agent.
 
-1. The agent retries or continues the request and presents the transaction token to the protected resource.
+1. The agent retries or continues the request and presents the access token to the protected resource.
 
-1. The protected resource validates the transaction token and processes the request if the token authorizes the
-   challenged operation.
+1. The protected resource validates the access token, including its authorization details, and processes the
+   request if the token authorizes the challenged operation.
 
 # Transaction Authorization Challenge
 
 A transaction authorization challenge is a signed JWT ({{!JWT=RFC7519}}) generated by a protected resource to
 request transaction-specific authorization for a particular operation. The challenge describes the operation to be
-authorized, identifies the authorization server expected to process the challenge, and contains freshness and
-integrity protection.
+authorized, identifies the authorization server expected to process the challenge, identifies the intended
+audience of the resulting access token, and contains freshness and integrity protection.
 
 The challenge is consumed by the authorization server and can also be validated by the client before the client
 presents it to the authorization server. The agent relays the challenge, but it is not trusted to modify the challenge
@@ -299,7 +306,7 @@ The `alg` value MUST NOT be `none`.
 The `kid` value in the JOSE header is used to identify the signing key in the protected resource's JWK Set.
 
 The challenge claims identify the protected resource, the authorization server expected to process the
-challenge, the transaction being authorized, and the intended audience of the resulting transaction token.
+challenge, the transaction being authorized, and the intended audience of the resulting access token.
 
 ### Challenge Claims
 
@@ -307,14 +314,14 @@ A transaction authorization challenge MUST contain the following claims:
 
 `iss`:
 : Issuer claim defined in {{JWT}}. Identifier of the protected resource that generated the challenge. The
-  transaction token issued in response to the challenge MUST use this value as its audience unless an
+  access token issued in response to the challenge MUST use this value as its audience unless an
   application profile defines a different audience binding.
 
 `aud`:
 : Audience claim defined in {{JWT}}. Identifier of the authorization server expected to validate the challenge
-  and issue a transaction token for the challenged operation. The value is selected by the protected resource
+  and issue an access token for the challenged operation. The value is selected by the protected resource
   and need not be the issuer of the access token presented with the original request. The protected resource
-  MUST select an authorization server that it trusts to evaluate the challenge and issue transaction tokens
+  MUST select an authorization server that it trusts to evaluate the challenge and issue access tokens
   for the requested operation.
 
 `iat`:
@@ -328,13 +335,14 @@ A transaction authorization challenge MUST contain the following claims:
 
 `txn`:
 : Transaction Identifier claim defined in {{!SET=RFC8417}}. Transaction identifier for the challenged operation.
-  The transaction token issued in response to the challenge MUST contain the same transaction identifier. The
+   in response to the challenge MUST contain the same transaction identifier. The
   transaction identifier MUST be unique within the context of the protected resource for the lifetime of the
-  challenge and any transaction token issued in response to it.
+  challenge and any access token issued in response to it.
 
 `authorization_details`:
-: Claim containing Authorization Details as defined in {{!OAUTH-RAR=RFC9396}}. Structured description of the operation
-  for which transaction-specific authorization is requested.
+: Claim containing Authorization Details as defined in {{OAUTH-RAR}}. Structured description of the operation
+  for which transaction-specific authorization is requested. The granted authorization details carried by the
+  access token issued in response to the challenge are derived from this value.
 
 `reason`:
 : Human-readable explanation of why transaction-specific authorization is required. This value is intended for
@@ -462,7 +470,7 @@ to the authorization server.
 ## Authorization Server Processing {#authorization-server-processing}
 
 The authorization server MUST validate the transaction authorization challenge before accepting it for processing or
-issuing a transaction token.
+issuing an access token.
 
 At a minimum, the authorization server MUST verify that:
 
@@ -474,10 +482,10 @@ At a minimum, the authorization server MUST verify that:
 
 * the `aud` claim identifies the authorization server;
 
-* the authorization server is willing to issue transaction tokens for the protected resource identified by the `iss`
+* the authorization server is willing to issue access tokens for the protected resource identified by the `iss`
   claim and for the requested operation;
 
-* the transaction token issued in response to the challenge will use the protected resource identified by the `iss` claim
+* the access token issued in response to the challenge will use the protected resource identified by the `iss` claim
   as its audience, unless an application profile defines a different audience binding;
 
 * the `txn` claim is present, is a string, and is acceptable;
@@ -493,14 +501,14 @@ The authorization server determines the approving party according to local polic
 associated with the original request, a different resource owner, an administrator, an organizational approval workflow,
 or another policy authority.
 
-The authorization server MUST obtain any required approval before issuing a transaction token. The authorization server
+The authorization server MUST obtain any required approval before issuing an access token. The authorization server
 SHOULD present the approving party with sufficient information to understand the operation being authorized. The
 authorization server MUST NOT rely on an unprotected description supplied by the agent as the basis for the
 authorization decision.
 
 If the authorization server accepts the challenge for processing, the client obtains the result using the transaction
 authorization flow described in {{transaction-authorization-flow}}. If the authorization server rejects the challenge,
-cannot validate the challenge, or cannot obtain the required approval, it MUST NOT issue a transaction token for the
+cannot validate the challenge, or cannot obtain the required approval, it MUST NOT issue an access token for the
 challenged operation.
 
 # Transaction Authorization Flow {#transaction-authorization-flow}
@@ -513,11 +521,11 @@ the OAuth 2.0 Device Authorization Grant defined in {{!OAUTH-DEVICE=RFC8628}}.
 Unlike the Device Authorization Grant, this flow does not use a device code, user code, or verification URI. Instead,
 the client submits a signed transaction authorization challenge to the authorization server. If the authorization server
 accepts the challenge for processing, it returns a transaction authorization identifier. The client then polls the transaction
-authorization endpoint with that identifier until the authorization server returns a transaction token or an error.
+authorization endpoint with that identifier until the authorization server returns an access token or an error.
 
 A successful transaction authorization response does not indicate that the challenged operation has been approved.
 It only indicates that the authorization server has accepted the transaction authorization challenge for processing.
-The challenged operation is authorized only when the authorization server issues a transaction token and the protected
+The challenged operation is authorized only when the authorization server issues an access token and the protected
 resource accepts that token for the challenged operation.
 
 The following figure shows the transaction authorization flow:
@@ -553,7 +561,7 @@ The following figure shows the transaction authorization flow:
     |---------------------------------------->|                         |
     |                                         |                         |
     |      Transaction Authorization Response |                         |
-    |                       transaction token |                         |
+    |                            access token |                         |
     |<----------------------------------------|                         |
     |                                         |                         |
 ~~~
@@ -601,11 +609,11 @@ accepting the request for processing.
 ## Transaction Authorization Response
 
 After receiving a transaction authorization request, the authorization server validates the transaction authorization challenge as
-described in {{authorization-server-processing}}. The authorization server then either issues a transaction token, indicates that
+described in {{authorization-server-processing}}. The authorization server then either issues an access token, indicates that
 the transaction authorization request is pending, or returns an error response.
 
-If the authorization server approves the challenged operation without additional interaction, it returns a transaction token
-response as described in {{successful-transaction-token-response}}.
+If the authorization server approves the challenged operation without additional interaction, it returns an access token
+response as described in {{successful-access-token-response}}.
 
 If additional interaction or policy evaluation is required, the authorization server returns an HTTP 200 response with an
 `application/json` body containing the following parameters:
@@ -716,20 +724,41 @@ least 5 seconds.
 On encountering a connection timeout, clients MUST unilaterally reduce their polling frequency before retrying. The use of an exponential
 backoff algorithm to achieve this, such as doubling the polling interval on each such connection timeout, is RECOMMENDED.
 
-If the transaction authorization request is approved, the authorization server returns a transaction token response as described in
-{{successful-transaction-token-response}}.
+If the transaction authorization request is approved, the authorization server returns an access token response as described in
+{{successful-access-token-response}}.
 
 If the approving party denies the request, the authorization server returns an error response with the `access_denied` error code.
 If the transaction authorization request has expired, the authorization server returns an error response with the `expired_token`
 error code, as defined in {{Section 3.5 of OAUTH-DEVICE}}.
 
-## Successful Transaction Token Response {#successful-transaction-token-response}
+## Successful Access Token Response {#successful-access-token-response}
 
-If the transaction authorization request is approved, the authorization server returns a transaction token response.
+If the transaction authorization request is approved, the authorization server returns an access token response.
 
-The transaction token response uses the response format defined by {{TXN-TOKENS}}. The transaction token MUST contain the `txn`
-value from the transaction authorization challenge. The transaction token MUST use the `iss` value from the transaction authorization
-challenge as its audience unless an application profile defines a different audience binding.
+The response uses the access token response format defined in {{Section 5.1 of OAUTH-FRAMEWORK}} and the
+`authorization_details` response parameter defined in {{Section 7 of OAUTH-RAR}}. The granted
+`authorization_details` value MUST describe the operation approved for the challenged transaction and MUST
+be derived from the `authorization_details` claim of the transaction authorization challenge. The
+authorization server MAY normalize, narrow, or otherwise constrain the granted authorization details
+relative to those requested by the challenge, but MUST NOT broaden them.
+
+The authorization_details parameter in the token response is returned by the authorization server as required
+by Section 7 of {{OAUTH-RAR}} and conveys the authorization details as granted, which MAY differ from those
+requested in the challenge. This response parameter is informational for the client. The protected resource
+MUST determine authorization from the granted authorization details bound to the access token
+(see {{access-token}}), and MUST NOT rely on the token response parameter.
+
+The access token MUST contain the `txn` value from the transaction authorization challenge, MUST be bound
+to the granted authorization details, and MUST use the `iss` value from the transaction authorization
+challenge as its audience unless an application profile defines a different audience binding. The
+authorization server MAY issue this access token in any access token format negotiated with the protected
+resource; when JWT access tokens defined in {{?JWT-AT=RFC9068}} are used, the `txn` and
+`authorization_details` claims are included as defined in {{SET}} and {{Section 9 of OAUTH-RAR}}
+respectively.
+
+The access token issued in response to a transaction authorization challenge is scoped to the challenged
+operation and MUST NOT be accepted as authorization for any operation that is not described by its granted
+authorization details.
 
 For example:
 
@@ -739,49 +768,73 @@ Content-Type: application/json
 Cache-Control: no-store
 
 {
-  "access_token": "eyJhbGciOiJFUzI1NiIsInR4bnRva2VuK2p3dCJ9...",
-  "issued_token_type": "urn:ietf:params:oauth:token-type:txn_token",
-  "token_type": "N_A"
+  "access_token": "eyJhbGciOiJFUzI1NiIsInR5cCI6ImF0K2p3dCJ9...",
+  "token_type": "Bearer",
+  "expires_in": 120,
+  "authorization_details": [
+    {
+      "type": "payment",
+      "actions": ["initiate"],
+      "locations": ["https://payments.example.com/accounts/123"],
+      "instructedAmount": {
+        "currency": "GBP",
+        "amount": "5000.00"
+      },
+      "creditorName": "Example Ltd"
+    }
+  ]
 }
 ~~~
-{: #fig-transaction-token-response title="Successful transaction token response"}
+{: #fig-access-token-response title="Successful access token response"}
 
-# Transaction Token {#transaction-token}
 
-A transaction token issued in response to a transaction authorization challenge represents authorization for the challenged operation. This
-document profiles the transaction token defined in {{TXN-TOKENS}} for use as evidence of transaction-specific authorization.
+The access token MUST have a limited lifetime. The authorization server SHOULD issue the access token with a short lifetime because it represents
+authorization for a specific operation. Sender-constrained access tokens, for example using DPoP
+({{?DPOP=RFC9449}}) or mutual-TLS ({{?MTLS=RFC8705}}), MAY be used and are RECOMMENDED for high-impact
+operations.
 
-The transaction token is issued by the authorization server identified by the `aud` claim of the transaction authorization challenge and is
+# Access Token {#access-token}
+
+The access token issued in response to a transaction authorization challenge represents authorization for the challenged operation.
+It is an OAuth 2.0 access token whose granted authorization details, expressed using the `authorization_details` parameter and claim
+defined in {{OAUTH-RAR}}, describe the operation that was approved.
+
+The access token is issued by the authorization server identified by the `aud` claim of the transaction authorization challenge and is
 presented to the protected resource that issued the challenge.
 
-The transaction token MUST contain sufficient information for the protected resource to determine that the token authorizes the challenged
-operation. This information can include the `authorization_details` claim from the challenge, a reference to protected resource state, or other
-information agreed between the protected resource and authorization server.
+The access token MUST contain sufficient information for the protected resource to determine that the token authorizes the challenged
+operation. At a minimum, the access token MUST be bound to the `txn` value from the challenge and MUST carry granted authorization
+details that describe the approved operation. The granted authorization details MAY be the value of the `authorization_details` claim
+from the challenge, a value derived from it, or a reference to protected resource state agreed between the protected resource and the
+authorization server.
 
-The transaction token MUST have a limited lifetime. The authorization server SHOULD issue transaction tokens with short expiration times because
-they represent authorization for a specific operation.
+When requester context, such as the `act` claim, is present in the transaction authorization challenge, the authorization server MUST
+include equivalent requester context in the access token or otherwise bind the access token to that context.
 
-When requester context, such as the `act` claim, is present in the transaction authorization challenge, the authorization server MUST include
-equivalent requester context in the transaction token or otherwise bind the transaction token to that context.
+This access token is scoped to the challenged operation. Clients and protected resources MUST NOT assume that the
+access token issued in response to a transaction authorization challenge confers authorization beyond the operation described by its
+granted authorization details.
 
 ## Token Presentation
 
-The client provides the transaction token to the agent. The agent presents the transaction token to the protected resource
-together with the request for the challenged operation.
+The client provides the access token to the agent. The agent presents the access token to the protected resource together with the
+request for the challenged operation.
 
-In deployments where one agent delegates work to another agent, the transaction token MAY be relayed through one or more intermediate agents
-before being presented to the protected resource. Each agent that relays the transaction token MUST relay it without modification. An agent MUST
-NOT use the transaction token for a different transaction, different protected resource, or different requester context.
+In deployments where one agent delegates work to another agent, the access token MAY be relayed through one or more intermediate agents
+before being presented to the protected resource. Each agent that relays the access token MUST relay it without modification. An agent
+MUST NOT use the access token for a different transaction, different protected resource, or different requester context.
 
-When HTTP is used, the transaction token MUST be presented using the `Txn-Token` header field defined by {{TXN-TOKENS}}.
+When HTTP is used, the access token MUST be presented to the protected resource as defined by {{OAUTH-FRAMEWORK}}. Bearer access
+tokens are presented using the `Authorization` request header field as specified in {{?BEARER=RFC6750}}. Sender-constrained access
+tokens are presented using the mechanism defined by the corresponding access token format, for example {{?DPOP=RFC9449}} or
+{{?MTLS=RFC8705}}.
 
 For example:
 
 ~~~
 POST /payments HTTP/1.1
 Host: resource.example.com
-Authorization: Bearer mF_9.B5f-4.1JqM
-Txn-Token: eyJhbGciOiJFUzI1NiIsInR5cCI6InR4bnRva2VuK2p3dCJ9...
+Authorization: Bearer eyJhbGciOiJFUzI1NiIsInR5cCI6ImF0K2p3dCJ9...
 Content-Type: application/json
 
 {
@@ -790,47 +843,51 @@ Content-Type: application/json
   "recipient": "Example Ltd"
 }
 ~~~
-{: #fig-transaction-token-presentation title="Presenting a transaction token to a protected resource"}
+{: #fig-access-token-presentation title="Presenting the access token to a protected resource"}
 
-The agent MUST NOT modify the transaction token. If the agent cannot present the transaction token to the protected resource,
-the challenged operation cannot be completed using this mechanism.
+The agent MUST NOT modify the access token. If the agent cannot present the access token to the protected resource, the challenged
+operation cannot be completed using this mechanism.
 
 ## Protected Resource Validation
 
-Before accepting a transaction token as authorization for a challenged operation, the protected resource MUST validate the
-transaction token according to {{TXN-TOKENS}} and the requirements of this document.
+Before accepting the access token as authorization for a challenged operation, the protected resource MUST validate the access token
+according to {{OAUTH-FRAMEWORK}}, the access token format in use, and the requirements of this document.
 
 At a minimum, the protected resource MUST verify that:
 
-* the transaction token was issued by the authorization server identified by the `aud` claim of the transaction authorization challenge;
+* the access token was issued by the authorization server identified by the `aud` claim of the transaction authorization challenge;
 
-* the transaction token audience identifies the protected resource, unless an application profile defines a different audience binding;
+* the access token audience identifies the protected resource, unless an application profile defines a different audience binding;
 
-* the transaction token has not expired;
+* the access token has not expired;
 
-* the transaction token contains the same `txn` value as the transaction authorization challenge;
+* the access token is bound to the same `txn` value as the transaction authorization challenge;
 
-* the transaction token authorizes the requested operation;
+* the granted authorization details associated with the access token authorize the requested operation and are consistent with the
+  `authorization_details` claim of the transaction authorization challenge;
 
 * any requester context required by the transaction authorization challenge is present and matches the challenged transaction;
 
-* the transaction token has not previously been used, if the protected resource requires single-use transaction tokens.
+* the access token has not previously been used, if the protected resource requires single-use access tokens for the challenged operation.
 
-A protected resource MUST reject a transaction token that does not correspond to the transaction authorization challenge for the requested
+A protected resource MUST reject an access token that does not correspond to the transaction authorization challenge for the requested
 operation.
 
-A protected resource SHOULD treat transaction tokens as single-use when the challenged operation is non-idempotent or high impact.
-If single-use semantics are required, the protected resource MUST maintain sufficient state to detect replay of the transaction
-token or transaction identifier.
+A protected resource SHOULD treat access tokens issued in response to a transaction authorization challenge as single-use when the
+challenged operation is non-idempotent or high impact. If single-use semantics are required, the protected resource MUST maintain
+sufficient state to detect replay of the access token or transaction identifier.
 
-The protected resource MUST NOT accept a transaction token as general authorization for operations other than the challenged operation.
+The protected resource MUST NOT accept an access token issued in response to a transaction authorization challenge as general
+authorization for operations other than the challenged operation. In particular, the protected resource MUST NOT honour the granted
+authorization details of such an access token for any operation that is not the challenged operation described by those authorization
+details.
 
 # Security Considerations
 
-Transaction authorization challenges and transaction tokens are security-sensitive artifacts. A transaction
-authorization challenge requests authorization for a specific operation, and a transaction token represents evidence
-that the challenged operation was authorized. Implementations need to ensure that these artifacts cannot be modified,
-replayed, substituted, or used for a different operation.
+Transaction authorization challenges and the access tokens issued in response to them are security-sensitive
+artifacts. A transaction authorization challenge requests authorization for a specific operation, and the
+access token issued in response represents evidence that the challenged operation was authorized. Implementations
+need to ensure that these artifacts cannot be modified, replayed, substituted, or used for a different operation.
 
 A protected resource MUST sign each transaction authorization challenge using an asymmetric signing key. Clients and
 authorization servers MUST validate the challenge signature before using any claim from the challenge for display,
@@ -839,18 +896,24 @@ authentic.
 
 The authorization server MUST verify that the `aud` claim identifies the authorization server and that the protected
 resource identified by the `iss` claim is trusted to request transaction authorization for the requested operation. An
-authorization server MUST NOT issue a transaction token for a challenge issued by an unrecognized or unauthorized
+authorization server MUST NOT issue an access token for a challenge issued by an unrecognized or unauthorized
 protected resource.
 
-The transaction authorization challenge and the resulting transaction token MUST be bound to the same transaction
-identifier. The protected resource MUST verify that the `txn` value in the transaction token matches the `txn` value
-from the challenge. A transaction token MUST NOT be accepted as authorization for any operation other than the
-challenged operation.
+The transaction authorization challenge and the resulting access token MUST be bound to the same transaction
+identifier. The protected resource MUST verify that the `txn` value bound to the access token matches the `txn`
+value from the challenge. An access token issued in response to a transaction authorization challenge MUST NOT be
+accepted as authorization for any operation other than the challenged operation.
 
-Transaction tokens can be replayed if they are not sufficiently constrained. Authorization servers MUST issue
-transaction tokens with short lifetimes. Protected resources SHOULD treat transaction tokens as single-use for
-non-idempotent or high-impact operations, and maintain sufficient state to detect replay where single-use semantics
-are required.
+Access tokens issued in response to a transaction authorization challenge can be replayed if they are not
+sufficiently constrained. Authorization servers MUST issue these access tokens with short lifetimes and SHOULD
+issue them as sender-constrained access tokens, for example using DPoP ({{DPOP}}) or mutual-TLS ({{MTLS}}), for
+high-impact operations. Protected resources SHOULD treat these access tokens as single-use for non-idempotent or
+high-impact operations, and maintain sufficient state to detect replay where single-use semantics are required.
+
+Because the access token issued in response to a transaction authorization challenge carries granted
+authorization details that describe a specific operation, protected resources MUST evaluate those authorization
+details against the operation being requested. Accepting such an access token without evaluating its
+authorization details would allow a token issued for one operation to authorize a different operation.
 
 The agent is not trusted to modify or summarize the challenge. Clients and authorization servers MUST NOT rely on an
 unprotected description supplied by the agent as the basis for user display, policy evaluation, or authorization
@@ -868,9 +931,11 @@ challenge can contain sensitive information about the requested operation, user 
 organizational policy. Clients SHOULD allow the user to decline before disclosing the challenge to the authorization
 server when the challenge contains privacy-sensitive transaction details.
 
-Challenges and transaction tokens can reveal sensitive information if logged or exposed to unintended parties.
-Implementations SHOULD minimize the information included in challenges and transaction tokens, avoid logging them
-unless necessary, and protect them in transit and at rest.
+Challenges and the access tokens issued in response to them can reveal sensitive information if logged or exposed
+to unintended parties. In particular, the granted authorization details carried by the access token can describe
+the operation in detail. Implementations SHOULD minimize the information included in challenges and in the
+granted authorization details of the access token, avoid logging them unless necessary, and protect them in
+transit and at rest.
 
 Application profiles that define additional challenge claims, request binding mechanisms, or alternative audience
 bindings MUST describe how those extensions preserve challenge integrity, prevent replay and substitution, and avoid
