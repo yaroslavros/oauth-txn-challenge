@@ -29,6 +29,10 @@ author:
     organization: Zscaler
     email: yrosomakho@zscaler.com
  -
+    fullname: "Brian Campbell"
+    organization: "Ping Identity"
+    email: bcampbell@pingidentity.com
+ -
     fullname: Karl McGuinness
     organization: Independent
     email: public@karlmcguinness.com
