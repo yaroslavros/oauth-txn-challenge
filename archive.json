@@ -1,6 +1,6 @@
 {
   "magic": "E!vIA5L86J2I",
-  "timestamp": "2026-06-25T02:55:17.075382+00:00",
+  "timestamp": "2026-06-30T03:23:58.214307+00:00",
   "repo": "yaroslavros/oauth-txn-challenge",
   "labels": [
     {
@@ -286,6 +286,54 @@
       "body": "PR #10 returns granted authorization_details both inside the access token (the copy the protected resource validates) and as the token-response parameter required by RFC 9396 \u00a77.\n\nThe response parameter is a MUST in RFC 9396. In this draft the client typically acts as a relay and may not need the granted details, and surfacing them in plaintext to the client (and any relaying agent) has data-minimisation implications for sensitive operations (e.g. payment amount, creditor, account).\n\n1. Does the client in this flow have a genuine need for the response-parameter copy, or is the in-token copy sufficient?\n2. Can/should this draft deviate from RFC 9396 to make it optional?",
       "createdAt": "2026-06-24T13:01:15Z",
       "updatedAt": "2026-06-24T13:01:15Z",
+      "closedAt": null,
+      "comments": []
+    },
+    {
+      "number": 17,
+      "id": "I_kwDOSSp7CM8AAAABHDvpNQ",
+      "title": "Access Token not sufficient as unique output of a Transaction Challenge",
+      "url": "https://github.com/yaroslavros/oauth-txn-challenge/issues/17",
+      "state": "OPEN",
+      "author": "identitymonk",
+      "authorAssociation": "NONE",
+      "assignees": [],
+      "labels": [],
+      "body": "The Draft is about implementing a Challenge / Response for the confirmation for dedicated set of transaction details.\n\nWhile effectively RAR is focused on supporting the issuance of least privileges and more constrained Access Tokens, the scenario seems more importantly to point at supporting [Transactions Tokens ](https://datatracker.ietf.org/doc/draft-ietf-oauth-transaction-tokens/) as a first class output,\n\nI recommend the authors to extend the support to both class of tokens.\n",
+      "createdAt": "2026-06-29T13:42:07Z",
+      "updatedAt": "2026-06-29T13:42:07Z",
+      "closedAt": null,
+      "comments": []
+    },
+    {
+      "number": 18,
+      "id": "I_kwDOSSp7CM8AAAABHD3JDA",
+      "title": "Transaction Authorization Challenge must support option of DPoP key binding for issued Access Token",
+      "url": "https://github.com/yaroslavros/oauth-txn-challenge/issues/18",
+      "state": "OPEN",
+      "author": "identitymonk",
+      "authorAssociation": "NONE",
+      "assignees": [],
+      "labels": [],
+      "body": "If the outcome of the flow is an Access Toke, there must be an option to allow the token to be bound to a Resource Server owned key as the Access Token is of type `Bearer`.",
+      "createdAt": "2026-06-29T13:59:07Z",
+      "updatedAt": "2026-06-29T13:59:07Z",
+      "closedAt": null,
+      "comments": []
+    },
+    {
+      "number": 19,
+      "id": "I_kwDOSSp7CM8AAAABHD8hgg",
+      "title": "Twice is mentionned that the Access Token must not be modified, but can it be?",
+      "url": "https://github.com/yaroslavros/oauth-txn-challenge/issues/19",
+      "state": "OPEN",
+      "author": "identitymonk",
+      "authorAssociation": "NONE",
+      "assignees": [],
+      "labels": [],
+      "body": "I feel there is extra cautiousness on the aspect of multi agent interaction. Twice the Authors mentioned in section 6.1 that:\n\n-  Each agent that relays the access token MUST relay it without modification. \n- The agent MUST NOT modify the access token.\n\nBut can the Access Token be modified? It is a JWT that follows the BCP therefore protected by Signature, therefore if an Agent would modify it, the whole exchange would crumble anyway as a fail safe mechanism.\n\nTherefore, those should be dropped and replace by a statement that presentation of the Access Token should follow the latest BCP.",
+      "createdAt": "2026-06-29T14:10:34Z",
+      "updatedAt": "2026-06-29T14:10:34Z",
       "closedAt": null,
       "comments": []
     }
