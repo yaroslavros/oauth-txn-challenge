@@ -1,6 +1,6 @@
 {
   "magic": "E!vIA5L86J2I",
-  "timestamp": "2026-06-30T03:23:58.214307+00:00",
+  "timestamp": "2026-07-05T02:47:41.262345+00:00",
   "repo": "yaroslavros/oauth-txn-challenge",
   "labels": [
     {
@@ -336,6 +336,38 @@
       "updatedAt": "2026-06-29T14:10:34Z",
       "closedAt": null,
       "comments": []
+    },
+    {
+      "number": 20,
+      "id": "I_kwDOSSp7CM8AAAABHq7xvQ",
+      "title": "Use OAuth Deferred Token Response for the asynchronous authorization flow",
+      "url": "https://github.com/yaroslavros/oauth-txn-challenge/issues/20",
+      "state": "OPEN",
+      "author": "mcguinness",
+      "authorAssociation": "COLLABORATOR",
+      "assignees": [],
+      "labels": [],
+      "body": "## Problem\nThe draft defines its own asynchronous mechanism for obtaining transaction authorization: a dedicated transaction authorization endpoint, a `transaction_authorization_id`, and a device-grant-style polling loop (`authorization_pending`/`slow_down`, based on RFC 8628). This re-implements, in this spec, a general capability \u2014 defer a token decision and poll for it \u2014 that is being standardized separately.\n\n## Proposal\nReuse the OAuth Deferred Token Response (DTR) mechanism [`draft-gerber-oauth-deferred-token-response`] as the async substrate:\n- The client presents the transaction authorization challenge at the **token endpoint** via a new grant type `urn:ietf:params:oauth:grant-type:txn-authz-challenge`, signaling `completion_mode=deferred`.\n- If approval is asynchronous, the AS returns a DTR deferred response (`400 authorization_pending` + `deferral_code`); the client polls via `grant_type=urn:ietf:params:oauth:grant-type:deferred`.\n- On approval, the token endpoint returns the access token \u2014 unchanged from today.\n\n## Benefits\n- Stops defining a bespoke endpoint and polling protocol; removes the RFC 8628 dependency.\n- Inherits DTR's deferral-code sender-constraint, cancellation (revocation), and optional completion callbacks.\n- Aligns the asynchronous pattern with the rest of OAuth at the token endpoint.\n\n## Trade-offs / questions\n- This introduces a **normative dependency** on [`draft-gerber-oauth-deferred-token-response`], an early individual I-D. Is the WG comfortable depending on it now, or would an *informative* reference \u2014 retaining the current self-contained flow as a fallback until DTR matures \u2014 be preferable?\n- Token endpoint + new grant type, vs. keeping a dedicated endpoint?\n\nA PR implementing this is at #21 (independent, based on `main`).",
+      "createdAt": "2026-07-04T16:28:50Z",
+      "updatedAt": "2026-07-04T16:45:38Z",
+      "closedAt": null,
+      "comments": []
+    },
+    {
+      "number": 22,
+      "id": "I_kwDOSSp7CM8AAAABHq9rlQ",
+      "title": "Key-binding option for the issued access token via assurance profiles",
+      "url": "https://github.com/yaroslavros/oauth-txn-challenge/issues/22",
+      "state": "OPEN",
+      "author": "mcguinness",
+      "authorAssociation": "COLLABORATOR",
+      "assignees": [],
+      "labels": [],
+      "body": "Follow-up to #18 (option to key-bind the issued access token, since it is otherwise a Bearer token). This proposes a concrete design and a PR implementing it.\n\n## Proposal\n- Add a `cnf` claim to the challenge naming the key the protected resource observed on the triggering request; the authorization server **sender-constrains** the issued access token to that key, and the protected resource verifies proof of possession on presentation. **DPoP** mandatory-to-implement, **mutual-TLS** optional.\n- Express the *option* from #18 as two **assurance profiles**, selected per operation by the protected resource: **key-bound** (challenge carries `cnf` -> sender-constrained token) and **relay** (no `cnf` -> today's Bearer behavior).\n- Because a key-bound token cannot be relayed to and presented by a different agent, add **delegation** across agents via OAuth 2.0 Token Exchange (per-hop re-binding with an `act` chain).\n\n## Benefits\n- Closes the Bearer-replay/theft gap on the agent->RS leg (the leg the client can't otherwise authenticate on); gives verifiable requester context; works for public clients; preserves Bearer behavior as the relay profile.\n\n## Question on #18's wording\n#18 mentions binding to a *\"Resource Server owned key.\"* This proposal binds the token to the **requesting agent's key** via DPoP/mTLS, which is the standard sender-constraint that makes the token non-Bearer and verifiable at the RS. If an RS-owned-key model (e.g., audience-restriction to an RS key) was intended instead, let's discuss \u2014 the mechanics differ.",
+      "createdAt": "2026-07-04T16:38:53Z",
+      "updatedAt": "2026-07-04T16:38:53Z",
+      "closedAt": null,
+      "comments": []
     }
   ],
   "pulls": [
@@ -602,6 +634,58 @@
       "mergeCommit": {
         "oid": "b58627b71cad1d76d754dde6ed8d4788943b9b67"
       },
+      "comments": [],
+      "reviews": []
+    },
+    {
+      "number": 21,
+      "id": "PR_kwDOSSp7CM7t5JVe",
+      "title": "Use Deferred Token Response as the asynchronous substrate",
+      "url": "https://github.com/yaroslavros/oauth-txn-challenge/pull/21",
+      "state": "OPEN",
+      "author": "mcguinness",
+      "authorAssociation": "COLLABORATOR",
+      "assignees": [],
+      "labels": [],
+      "body": "Implements the proposal in #20.\n\nReplaces the bespoke transaction authorization endpoint and polling protocol with the OAuth Deferred Token Response mechanism ([`draft-gerber-oauth-deferred-token-response`]):\n- Present the challenge at the token endpoint via `grant_type=urn:ietf:params:oauth:grant-type:txn-authz-challenge` with `completion_mode=deferred`.\n- Defer with `400 authorization_pending` + `deferral_code`; poll via the deferred grant.\n- Remove the `transaction_authorization_endpoint` and `transaction_authorization_id` registrations; register the new grant type; discovery via `grant_types_supported` + `deferred_token_response_supported`.\n- The access token response is unchanged.\n\n**Notes**\n- Aligned with the current `draft-gerber-oauth-deferred-token-response` (v00 on the datatracker), which uses `deferral_code` (an earlier revision used `deferral_token`).\n- Based on `main`, builds cleanly with `kramdown-rfc`, and is independent of the other proposals on my fork.\n- **Normative dependency:** adds a normative dependency on the (early) `draft-gerber-oauth-deferred-token-response`; see #20 for the normative-vs-informative discussion.",
+      "createdAt": "2026-07-04T16:32:22Z",
+      "updatedAt": "2026-07-04T17:02:50Z",
+      "baseRepository": "yaroslavros/oauth-txn-challenge",
+      "baseRefName": "main",
+      "baseRefOid": "6ddf841de1c8d5e5555187bab436383890940bb8",
+      "headRepository": "mcguinness/oauth-txn-challenge",
+      "headRefName": "txn-dtr",
+      "headRefOid": "729b5e710141269adee91e2cf3fa7845e655ba37",
+      "closedAt": null,
+      "mergedAt": null,
+      "mergedBy": null,
+      "mergeCommit": null,
+      "comments": [],
+      "reviews": []
+    },
+    {
+      "number": 23,
+      "id": "PR_kwDOSSp7CM7t5NSv",
+      "title": "Add key binding, assurance profiles, and delegation",
+      "url": "https://github.com/yaroslavros/oauth-txn-challenge/pull/23",
+      "state": "OPEN",
+      "author": "mcguinness",
+      "authorAssociation": "COLLABORATOR",
+      "assignees": [],
+      "labels": [],
+      "body": "Addresses #18 (and proposed in #22).\n\nStrengthens the sender-constrained access token the draft already recommends into a binding the protected resource can require and verify:\n- Adds an **Agent Key and Proof of Possession** section (DPoP mandatory-to-implement, mutual-TLS optional) and a `cnf` claim in the challenge.\n- Adds **Assurance Profiles**: key-bound (default; `cnf` present -> sender-constrained) and relay (no `cnf` -> current Bearer behavior) \u2014 this is the *option* requested in #18.\n- In the key-bound profile the AS sender-constrains the access token and the PR verifies proof of possession.\n- Adds **delegation across agents** via OAuth 2.0 Token Exchange (a key-bound token can't be relayed to a different agent) and trust-domain propagation.\n\n**Notes**\n- Based on `main`, builds cleanly with `kramdown-rfc`, keeps the agent/Agent-Relay model, and is independent of my other proposals.\n- See #18 for the \"Resource Server owned key\" wording question \u2014 this binds to the requesting agent's key (DPoP/mTLS).",
+      "createdAt": "2026-07-04T16:39:07Z",
+      "updatedAt": "2026-07-04T16:39:07Z",
+      "baseRepository": "yaroslavros/oauth-txn-challenge",
+      "baseRefName": "main",
+      "baseRefOid": "6ddf841de1c8d5e5555187bab436383890940bb8",
+      "headRepository": "mcguinness/oauth-txn-challenge",
+      "headRefName": "txn-key-binding",
+      "headRefOid": "b1a053704357e420a45306280fe027b7d6d1b0a4",
+      "closedAt": null,
+      "mergedAt": null,
+      "mergedBy": null,
+      "mergeCommit": null,
       "comments": [],
       "reviews": []
     }
