@@ -1,6 +1,6 @@
 {
   "magic": "E!vIA5L86J2I",
-  "timestamp": "2026-07-05T02:47:41.262345+00:00",
+  "timestamp": "2026-07-23T02:27:59.079771+00:00",
   "repo": "yaroslavros/oauth-txn-challenge",
   "labels": [
     {
@@ -269,9 +269,17 @@
       "labels": [],
       "body": "Access tokens may not always be JWTs, and infromation may need to be resolved via introspection.",
       "createdAt": "2026-06-19T19:57:22Z",
-      "updatedAt": "2026-06-19T19:57:22Z",
+      "updatedAt": "2026-07-21T15:13:29Z",
       "closedAt": null,
-      "comments": []
+      "comments": [
+        {
+          "author": "njwatson32",
+          "authorAssociation": "NONE",
+          "body": "At the very least the draft shouldn't _assume_ that ATs are JWTs, which it seems to do in \u00a74.6: `the access token issued in response to the challenge will use the protected resource identified by the iss claim as its audience`.",
+          "createdAt": "2026-07-21T15:13:29Z",
+          "updatedAt": "2026-07-21T15:13:29Z"
+        }
+      ]
     },
     {
       "number": 16,
@@ -368,6 +376,30 @@
       "updatedAt": "2026-07-04T16:38:53Z",
       "closedAt": null,
       "comments": []
+    },
+    {
+      "number": 24,
+      "id": "I_kwDOSSp7CM8AAAABJnnZKw",
+      "title": "Worth considering an \"online\" optimization for cases where the client already has the user in the loop?",
+      "url": "https://github.com/yaroslavros/oauth-txn-challenge/issues/24",
+      "state": "OPEN",
+      "author": "njwatson32",
+      "authorAssociation": "NONE",
+      "assignees": [],
+      "labels": [],
+      "body": "If the user is actively using the client, it's possible that the transaction challenge could be resolved in the browser directly.  It could be an awkward user experience to be using an application on your PC and all of a sudden you get a push notification from the AS on your phone.\n\nOne possibility could be to allow the client to choose whether to present the transaction_challenge to the authorization_endpoint instead of the transaction_endpoint.",
+      "createdAt": "2026-07-21T15:29:13Z",
+      "updatedAt": "2026-07-22T08:13:15Z",
+      "closedAt": null,
+      "comments": [
+        {
+          "author": "njwatson32",
+          "authorAssociation": "NONE",
+          "body": "Actually, what I suggested here looks to be exactly https://datatracker.ietf.org/doc/draft-zehavi-oauth-rar-metadata/\n\nI wonder if it's worth merging these two, as it's the client that might know whether to resolve the RAR out of band via the transaction_endpoint or \"live\" using the authorization endpoint. One piece of glue that might be needed is for the RS to indicate whether the challenge is user-resolvable or not. (If the transaction approver is not the user then it would always need to be out of band so that the right entity can be notified.)",
+          "createdAt": "2026-07-22T08:13:15Z",
+          "updatedAt": "2026-07-22T08:13:15Z"
+        }
+      ]
     }
   ],
   "pulls": [
