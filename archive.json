@@ -1,6 +1,6 @@
 {
   "magic": "E!vIA5L86J2I",
-  "timestamp": "2026-07-23T02:27:59.079771+00:00",
+  "timestamp": "2026-07-26T02:30:06.551268+00:00",
   "repo": "yaroslavros/oauth-txn-challenge",
   "labels": [
     {
@@ -400,6 +400,22 @@
           "updatedAt": "2026-07-22T08:13:15Z"
         }
       ]
+    },
+    {
+      "number": 25,
+      "id": "I_kwDOSSp7CM8AAAABKJt-ig",
+      "title": "Externalized authorization (PEP/PDP, AuthZEN AARP): access token as a decision input, and carrying obligations",
+      "url": "https://github.com/yaroslavros/oauth-txn-challenge/issues/25",
+      "state": "OPEN",
+      "author": "mcguinness",
+      "authorAssociation": "COLLABORATOR",
+      "assignees": [],
+      "labels": [],
+      "body": "## Problem\nIn an externalized-authorization deployment, the protected resource is a **Policy Enforcement Point (PEP)** and the decision is made by a **Policy Decision Point (PDP)** (e.g. via the AuthZEN Authorization API). When the PDP cannot authorize an action *yet* because a prerequisite must first be met, the **AuthZEN Access Request and Approval Profile (AARP)** returns \"not yet \u2014 here is the prerequisite,\" and re-evaluates once it is satisfied.\n\nA transaction authorization challenge is a natural way to *satisfy* an AARP human-approval prerequisite. But the draft currently assumes the issued access token is the **final authorization the protected resource acts on** \u2014 which is exactly wrong for this deployment, where the enforcement point does not decide.\n\n## Worked example\n1. An agent tries to initiate a **\u00a35,000 payment to \"Example Ltd\"** on the user's behalf.\n2. The PEP asks the PDP to evaluate *(subject = agent, action = initiate, resource = payment \u00a35000 \u2192 Example Ltd)*. Per AARP, the PDP responds **\"pending \u2014 prerequisite: account-owner approval of this transaction.\"**\n3. The PEP surfaces this as a **transaction authorization challenge**; the flow obtains the owner's approval and issues an access token that is *evidence the approval prerequisite was satisfied* (bound to `txn`, narrowed to that payment).\n4. The PEP **re-submits the evaluation to the PDP, now presenting that access token as an input** (the satisfied prerequisite). The PDP re-evaluates and returns **permit \u2014 with obligations**, e.g. `write transaction-audit-log`, `notify account owner`, `single-use for this txn`.\n5. The PEP **enforces those obligations** as it executes the payment.\n\n## The two gaps this exposes\n- **Token-as-verdict vs. token-as-input (steps 3\u21924).** The draft frames the access token as the authorization the protected resource acts on. Here the enforcement point does not decide \u2014 it feeds the token *back into the PDP* as one input to a subsequent decision. Nothing in the draft sanctions \"this token is evidence a prerequisite was satisfied, which a PEP MAY feed into a downstream policy decision rather than treat as the verdict,\" so deployments must bend the language.\n- **No carrier for obligations (steps 4\u21925).** The PDP's permit carries obligations the enforcement point must apply (`audit-log`, `notify`, `single-use`). The draft has no defined place to convey them, so there is no interoperable way to get them to the enforcer.\n\n## Proposed direction (optional, additive, profile-agnostic)\n- Allow the access token to be treated as **terminal** authorization *or* as **one input to a downstream policy decision** (e.g. a PDP); the draft's validation requirements apply either way.\n- Allow **obligations** to be conveyed within the granted `authorization_details` or a claim defined by an application profile.\n\nThis keeps the core mechanism free of any dependency on AuthZEN while making it **bindable** by AuthZEN AARP / PEP-PDP deployments.",
+      "createdAt": "2026-07-25T14:53:15Z",
+      "updatedAt": "2026-07-25T14:53:15Z",
+      "closedAt": null,
+      "comments": []
     }
   ],
   "pulls": [
