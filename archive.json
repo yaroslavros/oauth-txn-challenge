@@ -1,6 +1,6 @@
 {
   "magic": "E!vIA5L86J2I",
-  "timestamp": "2026-07-26T02:30:06.551268+00:00",
+  "timestamp": "2026-09-03T02:49:58.794833+00:00",
   "repo": "yaroslavros/oauth-txn-challenge",
   "labels": [
     {
@@ -414,6 +414,38 @@
       "body": "## Problem\nIn an externalized-authorization deployment, the protected resource is a **Policy Enforcement Point (PEP)** and the decision is made by a **Policy Decision Point (PDP)** (e.g. via the AuthZEN Authorization API). When the PDP cannot authorize an action *yet* because a prerequisite must first be met, the **AuthZEN Access Request and Approval Profile (AARP)** returns \"not yet \u2014 here is the prerequisite,\" and re-evaluates once it is satisfied.\n\nA transaction authorization challenge is a natural way to *satisfy* an AARP human-approval prerequisite. But the draft currently assumes the issued access token is the **final authorization the protected resource acts on** \u2014 which is exactly wrong for this deployment, where the enforcement point does not decide.\n\n## Worked example\n1. An agent tries to initiate a **\u00a35,000 payment to \"Example Ltd\"** on the user's behalf.\n2. The PEP asks the PDP to evaluate *(subject = agent, action = initiate, resource = payment \u00a35000 \u2192 Example Ltd)*. Per AARP, the PDP responds **\"pending \u2014 prerequisite: account-owner approval of this transaction.\"**\n3. The PEP surfaces this as a **transaction authorization challenge**; the flow obtains the owner's approval and issues an access token that is *evidence the approval prerequisite was satisfied* (bound to `txn`, narrowed to that payment).\n4. The PEP **re-submits the evaluation to the PDP, now presenting that access token as an input** (the satisfied prerequisite). The PDP re-evaluates and returns **permit \u2014 with obligations**, e.g. `write transaction-audit-log`, `notify account owner`, `single-use for this txn`.\n5. The PEP **enforces those obligations** as it executes the payment.\n\n## The two gaps this exposes\n- **Token-as-verdict vs. token-as-input (steps 3\u21924).** The draft frames the access token as the authorization the protected resource acts on. Here the enforcement point does not decide \u2014 it feeds the token *back into the PDP* as one input to a subsequent decision. Nothing in the draft sanctions \"this token is evidence a prerequisite was satisfied, which a PEP MAY feed into a downstream policy decision rather than treat as the verdict,\" so deployments must bend the language.\n- **No carrier for obligations (steps 4\u21925).** The PDP's permit carries obligations the enforcement point must apply (`audit-log`, `notify`, `single-use`). The draft has no defined place to convey them, so there is no interoperable way to get them to the enforcer.\n\n## Proposed direction (optional, additive, profile-agnostic)\n- Allow the access token to be treated as **terminal** authorization *or* as **one input to a downstream policy decision** (e.g. a PDP); the draft's validation requirements apply either way.\n- Allow **obligations** to be conveyed within the granted `authorization_details` or a claim defined by an application profile.\n\nThis keeps the core mechanism free of any dependency on AuthZEN while making it **bindable** by AuthZEN AARP / PEP-PDP deployments.",
       "createdAt": "2026-07-25T14:53:15Z",
       "updatedAt": "2026-07-25T14:53:15Z",
+      "closedAt": null,
+      "comments": []
+    },
+    {
+      "number": 26,
+      "id": "I_kwDOSSp7CM8AAAABPZ-A1g",
+      "title": "Align on same error code as in OAuth 2.0 RAR Metadata and Error Remediation",
+      "url": "https://github.com/yaroslavros/oauth-txn-challenge/issues/26",
+      "state": "OPEN",
+      "author": "yaron-zehavi",
+      "authorAssociation": "NONE",
+      "assignees": [],
+      "labels": [],
+      "body": "Following discussion in IETF 126:\nhttps://docs.google.com/document/d/13SAD1KIl9xzw6gXhJ6u4hC2PL-E2sthHtw-nTw1Ilok/edit?tab=t.0\n\nPropose using the same error code `insufficient_authorization` for both drafts.\nThe draft-specific payload parameter name (`transaction_challenge` | `authorization_remediation`) shall indicate the remediation mechanism.",
+      "createdAt": "2026-09-02T20:23:13Z",
+      "updatedAt": "2026-09-02T20:24:01Z",
+      "closedAt": null,
+      "comments": []
+    },
+    {
+      "number": 27,
+      "id": "I_kwDOSSp7CM8AAAABPZ-9AA",
+      "title": "Signal non-remediable error",
+      "url": "https://github.com/yaroslavros/oauth-txn-challenge/issues/27",
+      "state": "OPEN",
+      "author": "yaron-zehavi",
+      "authorAssociation": "NONE",
+      "assignees": [],
+      "labels": [],
+      "body": "Following discussion in IETF 126:\nhttps://docs.google.com/document/d/13SAD1KIl9xzw6gXhJ6u4hC2PL-E2sthHtw-nTw1Ilok/edit?tab=t.0\n\nPropose when error is not remediable, remediation payload parameter `transaction_challenge` shall be omitted, signaling a terminal failure whose remediation RS cannot / will not guide.",
+      "createdAt": "2026-09-02T20:24:53Z",
+      "updatedAt": "2026-09-02T20:24:53Z",
       "closedAt": null,
       "comments": []
     }
