@@ -1,6 +1,6 @@
 {
   "magic": "E!vIA5L86J2I",
-  "timestamp": "2026-09-03T02:49:58.794833+00:00",
+  "timestamp": "2026-10-06T04:44:54.610652+00:00",
   "repo": "yaroslavros/oauth-txn-challenge",
   "labels": [
     {
@@ -79,15 +79,15 @@
       "id": "I_kwDOSSp7CM8AAAABCXi1hw",
       "title": "Transaction tokens are not Access Tokens",
       "url": "https://github.com/yaroslavros/oauth-txn-challenge/issues/2",
-      "state": "OPEN",
+      "state": "CLOSED",
       "author": "PieterKas",
-      "authorAssociation": "NONE",
+      "authorAssociation": "COLLABORATOR",
       "assignees": [],
       "labels": [],
       "body": "I would propose that instead of issuing a transaction token in response to the challenge, the authorisation server should issue an access token with some kind of indicator that the user has approved the explicit transaction and maybe with some additional claims, maybe as RAR claims, and then have that presented back to the resource server.\n\nTransaction tokens are really designed to carry transaction context based on the access token and are requested by the resource server, not by the client. Having the client pass around transaction tokens and then using a transaction token effectively as an access token feels problematic. I think just re-casting this as an access token with some specific claims that indicate that the user did approve the specific transaction is more likely to provide a smooth integration path that's going to be safer and easier to integrate rather than this sort of unusual flow of a transaction token being issued to a client, which is then presented to a resource server, which treats it as an access token. ",
       "createdAt": "2026-05-15T12:25:08Z",
-      "updatedAt": "2026-05-19T16:24:26Z",
-      "closedAt": null,
+      "updatedAt": "2026-10-04T12:42:03Z",
+      "closedAt": "2026-10-04T12:42:03Z",
       "comments": [
         {
           "author": "identitymonk",
@@ -729,7 +729,7 @@
       "labels": [],
       "body": "Implements the proposal in #20.\n\nReplaces the bespoke transaction authorization endpoint and polling protocol with the OAuth Deferred Token Response mechanism ([`draft-gerber-oauth-deferred-token-response`]):\n- Present the challenge at the token endpoint via `grant_type=urn:ietf:params:oauth:grant-type:txn-authz-challenge` with `completion_mode=deferred`.\n- Defer with `400 authorization_pending` + `deferral_code`; poll via the deferred grant.\n- Remove the `transaction_authorization_endpoint` and `transaction_authorization_id` registrations; register the new grant type; discovery via `grant_types_supported` + `deferred_token_response_supported`.\n- The access token response is unchanged.\n\n**Notes**\n- Aligned with the current `draft-gerber-oauth-deferred-token-response` (v00 on the datatracker), which uses `deferral_code` (an earlier revision used `deferral_token`).\n- Based on `main`, builds cleanly with `kramdown-rfc`, and is independent of the other proposals on my fork.\n- **Normative dependency:** adds a normative dependency on the (early) `draft-gerber-oauth-deferred-token-response`; see #20 for the normative-vs-informative discussion.",
       "createdAt": "2026-07-04T16:32:22Z",
-      "updatedAt": "2026-07-04T17:02:50Z",
+      "updatedAt": "2026-10-04T12:41:13Z",
       "baseRepository": "yaroslavros/oauth-txn-challenge",
       "baseRefName": "main",
       "baseRefOid": "6ddf841de1c8d5e5555187bab436383890940bb8",
@@ -741,7 +741,52 @@
       "mergedBy": null,
       "mergeCommit": null,
       "comments": [],
-      "reviews": []
+      "reviews": [
+        {
+          "id": "PRR_kwDOSSp7CM8AAAABQjrNUQ",
+          "commit": {
+            "abbreviatedOid": "729b5e7"
+          },
+          "author": "yaroslavros",
+          "authorAssociation": "OWNER",
+          "state": "COMMENTED",
+          "body": "",
+          "createdAt": "2026-10-04T12:29:17Z",
+          "updatedAt": "2026-10-04T12:41:03Z",
+          "comments": [
+            {
+              "originalPosition": 13,
+              "body": "```suggestion\nmechanism {{!DEFERRED=I-D.ietf-oauth-deferred-token-response}}, with the transaction authorization grant as the\n```",
+              "createdAt": "2026-10-04T12:29:17Z",
+              "updatedAt": "2026-10-04T12:41:03Z"
+            },
+            {
+              "originalPosition": 179,
+              "body": "This needs to be reconciled between https://datatracker.ietf.org/doc/draft-ietf-oauth-deferred-token-response/ and https://github.com/yaroslavros/oauth-txn-challenge/pull/23\n\nAccess token bound to the client key cannot be passed to the agent",
+              "createdAt": "2026-10-04T12:33:37Z",
+              "updatedAt": "2026-10-04T12:41:03Z"
+            },
+            {
+              "originalPosition": 129,
+              "body": "Why does client_id go away?",
+              "createdAt": "2026-10-04T12:35:53Z",
+              "updatedAt": "2026-10-04T12:41:03Z"
+            },
+            {
+              "originalPosition": 111,
+              "body": "\"Otherwise receives an error\" seems to be underspecified. What error?",
+              "createdAt": "2026-10-04T12:38:32Z",
+              "updatedAt": "2026-10-04T12:41:03Z"
+            },
+            {
+              "originalPosition": 185,
+              "body": "`authorization_uri` is not defined in draft-ietf-oauth-deferred-token-response. Should we propose it there?",
+              "createdAt": "2026-10-04T12:40:33Z",
+              "updatedAt": "2026-10-04T12:41:03Z"
+            }
+          ]
+        }
+      ]
     },
     {
       "number": 23,
@@ -755,7 +800,7 @@
       "labels": [],
       "body": "Addresses #18 (and proposed in #22).\n\nStrengthens the sender-constrained access token the draft already recommends into a binding the protected resource can require and verify:\n- Adds an **Agent Key and Proof of Possession** section (DPoP mandatory-to-implement, mutual-TLS optional) and a `cnf` claim in the challenge.\n- Adds **Assurance Profiles**: key-bound (default; `cnf` present -> sender-constrained) and relay (no `cnf` -> current Bearer behavior) \u2014 this is the *option* requested in #18.\n- In the key-bound profile the AS sender-constrains the access token and the PR verifies proof of possession.\n- Adds **delegation across agents** via OAuth 2.0 Token Exchange (a key-bound token can't be relayed to a different agent) and trust-domain propagation.\n\n**Notes**\n- Based on `main`, builds cleanly with `kramdown-rfc`, keeps the agent/Agent-Relay model, and is independent of my other proposals.\n- See #18 for the \"Resource Server owned key\" wording question \u2014 this binds to the requesting agent's key (DPoP/mTLS).",
       "createdAt": "2026-07-04T16:39:07Z",
-      "updatedAt": "2026-07-04T16:39:07Z",
+      "updatedAt": "2026-10-04T12:20:36Z",
       "baseRepository": "yaroslavros/oauth-txn-challenge",
       "baseRefName": "main",
       "baseRefOid": "6ddf841de1c8d5e5555187bab436383890940bb8",
@@ -767,7 +812,82 @@
       "mergedBy": null,
       "mergeCommit": null,
       "comments": [],
-      "reviews": []
+      "reviews": [
+        {
+          "id": "PRR_kwDOSSp7CM8AAAABQjchhQ",
+          "commit": {
+            "abbreviatedOid": "b1a0537"
+          },
+          "author": "yaroslavros",
+          "authorAssociation": "OWNER",
+          "state": "COMMENTED",
+          "body": "",
+          "createdAt": "2026-10-04T11:50:30Z",
+          "updatedAt": "2026-10-04T12:19:49Z",
+          "comments": [
+            {
+              "originalPosition": 1,
+              "body": "Let's define \"Agent Key\" here\n\n```suggestion\n\nAgent Key:\n: An asymmetric key controlled by the agent and used to prove possession when requesting a key-bound challenge\n  and presenting the resulting access token.\n\n```",
+              "createdAt": "2026-10-04T11:50:31Z",
+              "updatedAt": "2026-10-04T12:19:49Z"
+            },
+            {
+              "originalPosition": 4,
+              "body": "I would suggest moving this section under \"Transaction Authorization Challenge\" section between \"## Challenge Capability Signal\" and \"## Challenge Response\"",
+              "createdAt": "2026-10-04T11:52:29Z",
+              "updatedAt": "2026-10-04T12:19:49Z"
+            },
+            {
+              "originalPosition": 31,
+              "body": "This probably should be a sub-section of architecture.\n```suggestion\n## Assurance Profiles {#assurance-profiles}\n```",
+              "createdAt": "2026-10-04T12:03:12Z",
+              "updatedAt": "2026-10-04T12:19:49Z"
+            },
+            {
+              "originalPosition": 140,
+              "body": "```suggestion\n## Delegation Across Agents {#delegation}\n```",
+              "createdAt": "2026-10-04T12:05:01Z",
+              "updatedAt": "2026-10-04T12:19:49Z"
+            },
+            {
+              "originalPosition": 1,
+              "body": "```suggestion\n  \"txn\": \"97053963-771d-49cc-a4e3-20aad399c312\",\n  \"cnf\": {\n    \"jkt\": \"NzbLsXh8uDCcd-6MNwXF4W_7noWXFZAfHkxZsRGC9Xs\"\n  },\n```",
+              "createdAt": "2026-10-04T12:11:14Z",
+              "updatedAt": "2026-10-04T12:19:49Z"
+            },
+            {
+              "originalPosition": 1,
+              "body": "```suggestion\n  \"token_type\": \"DPoP\",\n```",
+              "createdAt": "2026-10-04T12:12:17Z",
+              "updatedAt": "2026-10-04T12:19:49Z"
+            },
+            {
+              "originalPosition": 1,
+              "body": "```suggestion\nAuthorization: DPoP eyJhbGciOiJFUzI1NiIsInR5cCI6ImF0K2p3dCJ9...\nDPoP: eyJ0eXAiOiJkcG9wK2p3dCIsImFsZyI6IkVTMjU2IiwiandrIjp7...\n```",
+              "createdAt": "2026-10-04T12:13:55Z",
+              "updatedAt": "2026-10-04T12:19:49Z"
+            },
+            {
+              "originalPosition": 9,
+              "body": "```suggestion\nIn the key-bound profile, the agent controls an asymmetric key, the agent key, and proves\npossession of it. The protected resource identifies this key in the signed challenge, and\nthe authorization server binds the resulting access token to it. The protected resource\nverifies proof of possession of the same key when the access token is presented.\n```",
+              "createdAt": "2026-10-04T12:15:01Z",
+              "updatedAt": "2026-10-04T12:19:49Z"
+            },
+            {
+              "originalPosition": 47,
+              "body": "```suggestion\n: The challenge omits the `cnf` claim. Binding the issued access token to an agent key\n  identified by the challenge is not required. This profile supports agents that cannot\n  prove possession of a key. The authorization server MAY still use sender-constrained\n  access tokens as described in {{successful-access-token-response}}. When a bearer access\n  token is issued, replay is mitigated by short lifetime and single use, so a protected\n  resource SHOULD restrict its use to operations for which that protection is acceptable.\n```",
+              "createdAt": "2026-10-04T12:15:45Z",
+              "updatedAt": "2026-10-04T12:19:49Z"
+            },
+            {
+              "originalPosition": 152,
+              "body": "```suggestion\ndetails, and extended with an `act` claim identifying the downstream agent as the current actor,\nwith prior actors represented by nested `act` claims. The subject token is\n```",
+              "createdAt": "2026-10-04T12:19:27Z",
+              "updatedAt": "2026-10-04T12:19:49Z"
+            }
+          ]
+        }
+      ]
     }
   ]
 }
