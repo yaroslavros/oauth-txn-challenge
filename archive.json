@@ -1,6 +1,6 @@
 {
   "magic": "E!vIA5L86J2I",
-  "timestamp": "2026-10-06T04:44:54.610652+00:00",
+  "timestamp": "2026-10-11T03:51:12.390443+00:00",
   "repo": "yaroslavros/oauth-txn-challenge",
   "labels": [
     {
@@ -727,15 +727,15 @@
       "authorAssociation": "COLLABORATOR",
       "assignees": [],
       "labels": [],
-      "body": "Implements the proposal in #20.\n\nReplaces the bespoke transaction authorization endpoint and polling protocol with the OAuth Deferred Token Response mechanism ([`draft-gerber-oauth-deferred-token-response`]):\n- Present the challenge at the token endpoint via `grant_type=urn:ietf:params:oauth:grant-type:txn-authz-challenge` with `completion_mode=deferred`.\n- Defer with `400 authorization_pending` + `deferral_code`; poll via the deferred grant.\n- Remove the `transaction_authorization_endpoint` and `transaction_authorization_id` registrations; register the new grant type; discovery via `grant_types_supported` + `deferred_token_response_supported`.\n- The access token response is unchanged.\n\n**Notes**\n- Aligned with the current `draft-gerber-oauth-deferred-token-response` (v00 on the datatracker), which uses `deferral_code` (an earlier revision used `deferral_token`).\n- Based on `main`, builds cleanly with `kramdown-rfc`, and is independent of the other proposals on my fork.\n- **Normative dependency:** adds a normative dependency on the (early) `draft-gerber-oauth-deferred-token-response`; see #20 for the normative-vs-informative discussion.",
+      "body": "Implements the proposal in #20.\n\nReplaces the bespoke transaction authorization endpoint and polling protocol with OAuth Deferred Token Response ([`draft-ietf-oauth-deferred-token-response`](https://datatracker.ietf.org/doc/draft-ietf-oauth-deferred-token-response/)):\n- Present the challenge at the token endpoint via `grant_type=urn:ietf:params:oauth:grant-type:txn-authz-challenge` with `completion_mode=deferred`.\n- Defer with `400 authorization_pending` + `deferral_code`; poll via the deferred grant.\n- A client that did not opt in to deferral and cannot be approved synchronously receives `access_denied`; it can retry with `completion_mode=deferred`.\n- Remove the `transaction_authorization_endpoint` and `transaction_authorization_id` registrations; register the new grant type; discovery via `grant_types_supported` + `deferred_token_response_supported`.\n- Replace `authorization_uri` with DTR's `interaction_required` state and `interaction_uri` parameter for approvals that need interaction.\n- The access token response is unchanged.\n\n**Notes**\n- Tracks the DTR editor's copy at `oauth-wg/oauth-deferred-token-response@4001584` (ahead of -01): `interaction_required`/`interaction_uri`, base64url `deferral_code` examples, and the Substrate Invariants. The normative reference resolves to -00 until -01 is posted.\n- **Open issue: access-token binding.** DTR's Sender-Constraint Requirements require a public client to send DPoP on the initial token request, and bind the access token issued on polling to that same client key; Substrate Guarantee 3 repeats this for every originating grant. In this draft the agent, not the client, presents the access token, so a token bound to the client's key is unusable by the agent. The draft states this and carries an Editor's Note; resolving it needs DTR to let the originating grant define access-token binding separately from deferral-code binding. Relates to #23.\n- Based on `main`; builds cleanly with `kramdown-rfc`.\n- **Normative dependency:** DTR is still an Internet-Draft, so the normative reference holds publication of this document until DTR is published; see #20 for the normative-vs-informative discussion.\n",
       "createdAt": "2026-07-04T16:32:22Z",
-      "updatedAt": "2026-10-04T12:41:13Z",
+      "updatedAt": "2026-10-09T20:33:26Z",
       "baseRepository": "yaroslavros/oauth-txn-challenge",
       "baseRefName": "main",
       "baseRefOid": "6ddf841de1c8d5e5555187bab436383890940bb8",
       "headRepository": "mcguinness/oauth-txn-challenge",
       "headRefName": "txn-dtr",
-      "headRefOid": "729b5e710141269adee91e2cf3fa7845e655ba37",
+      "headRefOid": "81cf1067d4bdc85110f89b656a09cd837235ede3",
       "closedAt": null,
       "mergedAt": null,
       "mergedBy": null,
@@ -785,6 +785,86 @@
               "updatedAt": "2026-10-04T12:41:03Z"
             }
           ]
+        },
+        {
+          "id": "PRR_kwDOSSp7CM8AAAABRksRIQ",
+          "commit": {
+            "abbreviatedOid": "729b5e7"
+          },
+          "author": "mcguinness",
+          "authorAssociation": "COLLABORATOR",
+          "state": "COMMENTED",
+          "body": "",
+          "createdAt": "2026-10-09T19:08:58Z",
+          "updatedAt": "2026-10-09T19:08:59Z",
+          "comments": [
+            {
+              "originalPosition": 185,
+              "body": "Agreed. DTR's editor's copy now covers this with `interaction_required` and `interaction_uri` (oauth-wg/oauth-deferred-token-response#49), so the PR uses those instead (02d64ea). The reference resolves to -00 until -01 is posted.",
+              "createdAt": "2026-10-09T19:08:58Z",
+              "updatedAt": "2026-10-09T20:40:03Z"
+            }
+          ]
+        },
+        {
+          "id": "PRR_kwDOSSp7CM8AAAABRlYtgg",
+          "commit": {
+            "abbreviatedOid": "729b5e7"
+          },
+          "author": "mcguinness",
+          "authorAssociation": "COLLABORATOR",
+          "state": "COMMENTED",
+          "body": "",
+          "createdAt": "2026-10-09T20:26:00Z",
+          "updatedAt": "2026-10-09T20:26:01Z",
+          "comments": [
+            {
+              "originalPosition": 179,
+              "body": "Agreed, even without #23. DTR's sender-constraint rules and Substrate Guarantee 3 bind the issued token to the client's DPoP key, so a separate agent can't present it. I fixed the text and added an editor's note (04064ea, 81cf106). With #23 it works when the agent is the OAuth client, since its DPoP key is the `cnf` key. Otherwise DTR needs to let the originating grant define token binding: oauth-wg/oauth-deferred-token-response#75.",
+              "createdAt": "2026-10-09T20:26:00Z",
+              "updatedAt": "2026-10-09T20:40:04Z"
+            }
+          ]
+        },
+        {
+          "id": "PRR_kwDOSSp7CM8AAAABRlZHMw",
+          "commit": {
+            "abbreviatedOid": "729b5e7"
+          },
+          "author": "mcguinness",
+          "authorAssociation": "COLLABORATOR",
+          "state": "COMMENTED",
+          "body": "",
+          "createdAt": "2026-10-09T20:26:41Z",
+          "updatedAt": "2026-10-09T20:26:41Z",
+          "comments": [
+            {
+              "originalPosition": 129,
+              "body": "Fixed: `client_id` is back in the grant and poll examples, with the DPoP proof DTR \u00a710.1 requires of public clients (b352955). The response and presentation examples now use DPoP to match (2f5c4ff).",
+              "createdAt": "2026-10-09T20:26:41Z",
+              "updatedAt": "2026-10-09T20:26:41Z"
+            }
+          ]
+        },
+        {
+          "id": "PRR_kwDOSSp7CM8AAAABRlZg8Q",
+          "commit": {
+            "abbreviatedOid": "729b5e7"
+          },
+          "author": "mcguinness",
+          "authorAssociation": "COLLABORATOR",
+          "state": "COMMENTED",
+          "body": "",
+          "createdAt": "2026-10-09T20:27:22Z",
+          "updatedAt": "2026-10-09T20:27:22Z",
+          "comments": [
+            {
+              "originalPosition": 111,
+              "body": "DTR \u00a74.3 leaves this to the originating grant, so it's now a MUST: `access_denied`, as used by RFC 8628 and DTR \u00a75.6. The client can retry with `completion_mode=deferred` (e908742).",
+              "createdAt": "2026-10-09T20:27:22Z",
+              "updatedAt": "2026-10-09T20:27:22Z"
+            }
+          ]
         }
       ]
     },
@@ -800,13 +880,13 @@
       "labels": [],
       "body": "Addresses #18 (and proposed in #22).\n\nStrengthens the sender-constrained access token the draft already recommends into a binding the protected resource can require and verify:\n- Adds an **Agent Key and Proof of Possession** section (DPoP mandatory-to-implement, mutual-TLS optional) and a `cnf` claim in the challenge.\n- Adds **Assurance Profiles**: key-bound (default; `cnf` present -> sender-constrained) and relay (no `cnf` -> current Bearer behavior) \u2014 this is the *option* requested in #18.\n- In the key-bound profile the AS sender-constrains the access token and the PR verifies proof of possession.\n- Adds **delegation across agents** via OAuth 2.0 Token Exchange (a key-bound token can't be relayed to a different agent) and trust-domain propagation.\n\n**Notes**\n- Based on `main`, builds cleanly with `kramdown-rfc`, keeps the agent/Agent-Relay model, and is independent of my other proposals.\n- See #18 for the \"Resource Server owned key\" wording question \u2014 this binds to the requesting agent's key (DPoP/mTLS).",
       "createdAt": "2026-07-04T16:39:07Z",
-      "updatedAt": "2026-10-04T12:20:36Z",
+      "updatedAt": "2026-10-09T18:27:45Z",
       "baseRepository": "yaroslavros/oauth-txn-challenge",
       "baseRefName": "main",
       "baseRefOid": "6ddf841de1c8d5e5555187bab436383890940bb8",
       "headRepository": "mcguinness/oauth-txn-challenge",
       "headRefName": "txn-key-binding",
-      "headRefOid": "b1a053704357e420a45306280fe027b7d6d1b0a4",
+      "headRefOid": "1d0abedf9a1835818de45135676c7df32dcdd6d4",
       "closedAt": null,
       "mergedAt": null,
       "mergedBy": null,
