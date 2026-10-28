@@ -5,12 +5,12 @@
 Web Authorization Protocol                                  Y. Rosomakho
 Internet-Draft                                                   Zscaler
 Intended status: Standards Track                             B. Campbell
-Expires: 27 December 2026                                  Ping Identity
+Expires: 1 May 2027                                        Ping Identity
                                                            K. McGuinness
                                                              Independent
                                                             P. Kasselman
                                                         Defakto Security
-                                                            25 June 2026
+                                                         28 October 2026
 
 
                OAuth Transaction Authorization Challenge
@@ -65,7 +65,7 @@ Status of This Memo
    time.  It is inappropriate to use Internet-Drafts as reference
    material or to cite them other than as "work in progress."
 
-   This Internet-Draft will expire on 27 December 2026.
+   This Internet-Draft will expire on 1 May 2027.
 
 Copyright Notice
 
@@ -160,6 +160,16 @@ Table of Contents
    different from the subject associated with the access token used for
    the original request.
 
+   Automated clients, including AI agents, are deployed with different
+   levels of human oversight [FSB-AI].  With human-in-the-loop (HITL), a
+   person approves an action before it is taken.  With human-on-the-loop
+   (HOTL), actions proceed and a person can intervene or stop them.
+   With human-out-of-the-loop (HOOTL), no person is involved when the
+   action is taken, and authorization is decided by policy that a person
+   previously approved.  This document supports all three modes by
+   letting the authorization server obtain approval asynchronously from
+   the appropriate party.
+
 1.1.  Human Approval for Agent-Mediated Actions
 
    Software agents, automated workflows, and delegated services can
@@ -237,6 +247,17 @@ Table of Contents
    Transaction Authorization Challenge:  A challenge returned by a
       protected resource to indicate that a specific requested operation
       requires transaction-specific authorization before it can proceed.
+
+   Human-in-the-Loop (HITL):  A mode of operation in which a person
+      approves an action before it is taken.
+
+   Human-on-the-Loop (HOTL):  A mode of operation in which actions
+      proceed without prior approval and a person monitors them and can
+      intervene or stop them.
+
+   Human-out-of-the-Loop (HOOTL):  A mode of operation in which no
+      person is involved when an action is taken, and authorization is
+      decided by policy that a person previously approved.
 
 3.  Architecture
 
@@ -709,6 +730,13 @@ WWW-Authenticate: Bearer error="transaction_authorization_required",
    authorized only when the authorization server issues an access token
    and the protected resource accepts that token for the challenged
    operation.
+
+   The level of human oversight is a deployment choice and does not
+   change the protocol.  The client uses the same grant and the same
+   deferred token response flow whether the challenge is approved by a
+   person before the operation proceeds (HITL), approved automatically
+   subject to human monitoring and intervention (HOTL), or approved by
+   policy a person established in advance (HOOTL).
 
    The following figure shows the transaction authorization flow:
 
@@ -1426,6 +1454,11 @@ Cache-Control: no-store
               Jones, M., and D. Waite, "OAuth 2.0 Demonstrating Proof of
               Possession (DPoP)", RFC 9449, DOI 10.17487/RFC9449,
               September 2023, <https://www.rfc-editor.org/rfc/rfc9449>.
+
+   [FSB-AI]   Financial Stability Board, "Sound Practices for
+              Responsible Adoption of Artificial Intelligence (AI):
+              Final report", 15 October 2026,
+              <https://www.fsb.org/uploads/P151026-1.pdf>.
 
    [IANA.HTTP.FieldNames]
               "Hypertext Transfer Protocol (HTTP) Field Name Registry",
