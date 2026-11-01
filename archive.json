@@ -1,6 +1,6 @@
 {
   "magic": "E!vIA5L86J2I",
-  "timestamp": "2026-10-29T04:15:58.092965+00:00",
+  "timestamp": "2026-11-01T04:14:00.279617+00:00",
   "repo": "yaroslavros/oauth-txn-challenge",
   "labels": [
     {
@@ -446,6 +446,22 @@
       "body": "Following discussion in IETF 126:\nhttps://docs.google.com/document/d/13SAD1KIl9xzw6gXhJ6u4hC2PL-E2sthHtw-nTw1Ilok/edit?tab=t.0\n\nPropose when error is not remediable, remediation payload parameter `transaction_challenge` shall be omitted, signaling a terminal failure whose remediation RS cannot / will not guide.",
       "createdAt": "2026-09-02T20:24:53Z",
       "updatedAt": "2026-09-02T20:24:53Z",
+      "closedAt": null,
+      "comments": []
+    },
+    {
+      "number": 30,
+      "id": "I_kwDOSSp7CM8AAAABbBHYVA",
+      "title": "Executing an approved transaction with a different key",
+      "url": "https://github.com/yaroslavros/oauth-txn-challenge/issues/30",
+      "state": "OPEN",
+      "author": "mcguinness",
+      "authorAssociation": "COLLABORATOR",
+      "assignees": [],
+      "labels": [],
+      "body": "With key-bound challenges (#29), the access token is bound to the key of agent A, which triggered the challenge. A party B with a different key cannot present it:\n- another instance of A, such as a replica, or a replacement for one that lost its key while approval was pending;\n- a sub-agent of A;\n- another agent.\n\nToday B triggers its own challenge, which may need a second approval: the approving party is interrupted again, may no longer be available, and the operation is delayed. That is the safe default, because each approval shows who will execute. Can B execute the approved transaction without another approval when policy allows?\n\nThe first decision is scope: should this draft address this, or leave it out of scope, keeping the second approval as the intended model and leaving re-binding to a separate specification?\n\n**Proposal:** out of scope for this draft. Keep the second challenge as the intended model, and clarify that a protected resource may issue a new challenge with the same `txn` for the same operation, so an authorization server can reuse the approval under local policy. Leave re-binding by token exchange or delegation to a separate specification.\n\n### Constraints\n- **Authorization, not possession.** Holding A's challenge or token and proving B's key MUST NOT be enough. Re-binding needs evidence: B authenticates as A, A delegates to B, or a grant authorizes B. RFC 8693 leaves this to profiles (\u00a71).\n- **Same approval.** The same `txn`, audience and subject; equal or narrower `authorization_details`; no longer lifetime; single use across A and B. The requester context is unchanged or only adds B as the current actor (prior actors in `act` are informational, RFC 8693 \u00a74.1).\n- **Validation.** The protected resource needs a rule for accepting B's key instead of the challenge's `cnf`.\n\n### Options\n- **New challenge reusing the approval:** B gets its own challenge with the same `txn`, and the authorization server issues a token from the existing approval without asking again. The protected resource still vouches for B's key. Open: how B's request is linked to the `txn`, and who allows the reuse.\n- **Token exchange (RFC 8693):** A's token is exchanged, with evidence, for one bound to B's key. Needs a profile for the evidence, who exchanges (B may not be a client of the authorization server), and validation.\n- **Delegates named in the challenge:** rarely known when the challenge is issued, and needs a new claim.\n- **No re-binding:** a second approval, documented as intended.\n\n### Open questions\n- Who vouches for B's key: the protected resource, A, or B at the authorization server?\n- Is another instance of A a new actor, or only a new key?\n- Delegation or transfer: can A still execute once B has a token?\n- Must the approving party know about a change of executor?\n\nNot part of this issue: propagating transaction context within the protected resource's trust domain, as in #23.\n",
+      "createdAt": "2026-10-29T20:38:46Z",
+      "updatedAt": "2026-10-29T20:38:46Z",
       "closedAt": null,
       "comments": []
     }
@@ -1000,7 +1016,7 @@
       "labels": [],
       "body": "Addresses #18 (and proposed in #22).\n\nStrengthens the sender-constrained access token the draft already recommends into a binding the protected resource can require and verify:\n- Adds an **Agent Key and Proof of Possession** section (DPoP mandatory-to-implement, mutual-TLS optional) and a `cnf` claim in the challenge.\n- Adds **Assurance Profiles**: key-bound (default; `cnf` present -> sender-constrained) and relay (no `cnf` -> current Bearer behavior) \u2014 this is the *option* requested in #18.\n- In the key-bound profile the AS sender-constrains the access token and the PR verifies proof of possession.\n- Adds **delegation across agents** via OAuth 2.0 Token Exchange (a key-bound token can't be relayed to a different agent) and trust-domain propagation.\n\n**Notes**\n- Based on `main`, builds cleanly with `kramdown-rfc`, keeps the agent/Agent-Relay model, and is independent of my other proposals.\n- See #18 for the \"Resource Server owned key\" wording question \u2014 this binds to the requesting agent's key (DPoP/mTLS).",
       "createdAt": "2026-07-04T16:39:07Z",
-      "updatedAt": "2026-10-28T11:00:27Z",
+      "updatedAt": "2026-10-30T11:00:08Z",
       "baseRepository": "yaroslavros/oauth-txn-challenge",
       "baseRefName": "main",
       "baseRefOid": "6ddf841de1c8d5e5555187bab436383890940bb8",
@@ -1126,6 +1142,46 @@
               "updatedAt": "2026-10-28T11:00:27Z"
             }
           ]
+        },
+        {
+          "id": "PRR_kwDOSSp7CM8AAAABVAYxvQ",
+          "commit": {
+            "abbreviatedOid": "1d0abed"
+          },
+          "author": "mcguinness",
+          "authorAssociation": "COLLABORATOR",
+          "state": "COMMENTED",
+          "body": "",
+          "createdAt": "2026-10-29T20:40:39Z",
+          "updatedAt": "2026-10-29T20:40:40Z",
+          "comments": [
+            {
+              "originalPosition": 74,
+              "body": "Yes, it was effectively bearer. #29 (6b10ca3) supersedes this PR and drops the named profiles: either the challenge is key-bound (it carries `cnf`, and the token is bound to that key with DPoP or mTLS), or the token is issued as it is today. On your side note, #29 doesn't allow token sharing: with a key-bound challenge only the key holder can present the token, another agent gets its own challenge, and re-binding to a different key is split out to #30 with a proposal to keep it out of scope.\n",
+              "createdAt": "2026-10-29T20:40:39Z",
+              "updatedAt": "2026-10-29T20:40:40Z"
+            }
+          ]
+        },
+        {
+          "id": "PRR_kwDOSSp7CM8AAAABVGtr6w",
+          "commit": {
+            "abbreviatedOid": "1d0abed"
+          },
+          "author": "PieterKas",
+          "authorAssociation": "COLLABORATOR",
+          "state": "COMMENTED",
+          "body": "",
+          "createdAt": "2026-10-30T11:00:08Z",
+          "updatedAt": "2026-10-30T11:00:08Z",
+          "comments": [
+            {
+              "originalPosition": 74,
+              "body": "Cool, I will review #29  ",
+              "createdAt": "2026-10-30T11:00:08Z",
+              "updatedAt": "2026-10-30T11:56:05Z"
+            }
+          ]
         }
       ]
     },
@@ -1154,6 +1210,421 @@
       "mergeCommit": null,
       "comments": [],
       "reviews": []
+    },
+    {
+      "number": 29,
+      "id": "PR_kwDOSSp7CM8AAAABLoEbcw",
+      "title": "Add access token key binding",
+      "url": "https://github.com/yaroslavros/oauth-txn-challenge/pull/29",
+      "state": "OPEN",
+      "author": "mcguinness",
+      "authorAssociation": "COLLABORATOR",
+      "assignees": [],
+      "labels": [],
+      "body": "Resolves #18. Supersedes #23.\n\n### What\nLets a challenge carry a `cnf` claim identifying a binding key: a key proved on the triggering request. The authorization server binds the issued access token to that key using DPoP (RFC 9449) or mutual-TLS (RFC 8705).\n\nBecause the key is signed into the challenge, relays cannot change it, and a stolen challenge yields a token the thief cannot present. The client that submits the challenge need not hold the key, so this works for agents and for clients that call the protected resource directly.\n\n### Why\nToday the issued access token defaults to a bearer token, and it passes through the client and any intermediate agents. DPoP and mutual-TLS alone bind it to a key that the client proves, but the client is often not the party that presents the token. The protected resource already sees the presenter's key, so it carries that key in the challenge. Everything else is delegated to RFC 9449 and RFC 8705.\n\n### Changes\n- **Access Token Key Binding** (new section):\n  - **Using an Existing Token Binding:** `cnf` is the key of the sender-constrained access token in the triggering request. No new client behavior.\n  - **Establishing a Binding Key:** with a bearer token, `cnf` is the key of a DPoP proof sent with it, an explicit extension of RFC 9449, or of the mutual-TLS client certificate. Written as processing steps for the protected resource, including errors and the requester-context restriction.\n- **`binding_key_required` error**, with `algs` as a `Bearer` parameter: asks for the request to be repeated with the same access token and a DPoP proof. Sent only to requests with `Accept-Txn-Challenge: ?1`. Registered in the OAuth Extensions Error registry.\n- **Authorization server:** binds the token to the `cnf` key per RFC 9449 or RFC 8705, and to no other key. It does not verify possession; it relies on the protected resource's signed challenge. Client authentication still applies, with a scoped exception to `dpop_bound_access_tokens`. It accepts each challenge once and issues no refresh token.\n- **Protected resource:** checks that the token is bound to the challenge's `cnf`.\n- **Token response:** client-bound tokens go from RECOMMENDED to MAY, because an agent that is not the client cannot present them. The client relays the token and its `token_type` without holding the key.\n- Security considerations, DPoP examples, and Bearer, DPoP and mutual-TLS as normative references.\n\n### Review updates\nbe351c2 and e93235b address PieterKas's review: \"binding key\" terminology, the RFC 9449 extension made explicit with token-less proofs dropped, an explicit `binding_key_required` signal, and the authorization server trust model.\n\n### Why this replaces #23\n- **No new concepts.** #23's \"Agent Key\" and assurance profiles become the presence of `cnf`, which also works for ordinary clients.\n- **Delegates.** RFC 9449 and RFC 8705 do the work. At issuance this PR adds only three rules: the key comes from the challenge, the client need not prove it, and no other key is used.\n- **Removes a contradiction.** #23 re-bound tokens to a downstream agent's key through token exchange, but its own validation rejected them. Re-binding is dropped, and the delegation scenario is deferred to #30.\n- **Specifies what #23 left open:**\n  - DPoP proofs sent with bearer tokens, and how to request one;\n  - the challenge's authentication scheme;\n  - errors;\n  - refresh tokens.\n- **Drops:**\n  - #23's mandatory-to-implement DPoP. The protected resource must instead know which methods the authorization server supports.\n  - #23's trust-domain propagation section, which is unrelated to key binding.\n\n### Left open\n- **Execution with a different key**, such as by another agent instance or a sub-agent. That party obtains its own challenge for now. Deferred to #30.\n- **Discovery of authorization server support** for binding keys. Configuration for now.\n- **mTLS-only protected resources** have no specific signal for requesting a certificate-bound token.\n\n### Also included, not specific to key binding\nThese close gaps in the base draft. I can split them out if you prefer.\n- A challenge that fails validation gets `invalid_grant`, or a more specific RFC 6749 \u00a75.2 code such as `unauthorized_client`.\n- Single use is enforced per `txn` value, so two access tokens for one transaction cannot each be accepted.\n\n### Validation\nBuilds cleanly with kramdown-rfc and xml2rfc. RFC section references are checked against the RFC text.\n",
+      "createdAt": "2026-10-29T20:38:02Z",
+      "updatedAt": "2026-10-30T18:46:22Z",
+      "baseRepository": "yaroslavros/oauth-txn-challenge",
+      "baseRefName": "main",
+      "baseRefOid": "6ddf841de1c8d5e5555187bab436383890940bb8",
+      "headRepository": "mcguinness/oauth-txn-challenge",
+      "headRefName": "key-bound-challenges",
+      "headRefOid": "e93235bf38b13280de0704bc517c3826085e1fb1",
+      "closedAt": null,
+      "mergedAt": null,
+      "mergedBy": null,
+      "mergeCommit": null,
+      "comments": [
+        {
+          "author": "mcguinness",
+          "authorAssociation": "COLLABORATOR",
+          "body": "@PieterKas \r\n> Terminology. \u201cKey-bound challenge\u201d suggests the challenge itself is bound to a key or carries a proof. It isn\u2019t: it carries a key that the access token should be bound to. I\u2019ve suggested renaming the section to \u201cAccess Token Key Binding\u201d (#access-token-key-binding) and using \u201cbinding key\u201d or \u201cchallenge that contains a cnf claim\u201d throughout. Note that the heading at line 457 also needs renaming, or the updated cross-references will break.\r\n\r\nI accepted the changes as the changes are clearer for the behavior currently specified. \r\n\r\nCan't the AS also require a proof and validate the cnf in the challenge to not only carry the key but ensure key binding of the challenge?  That was my original thinking. We would need to make that requirement explicit (what I didn't do),  since a client relaying an agent\u2019s challenge may not hold the binding key. That flow would require the agent to supply fresh proof for the AS.",
+          "createdAt": "2026-10-30T13:43:28Z",
+          "updatedAt": "2026-10-30T13:43:28Z"
+        },
+        {
+          "author": "mcguinness",
+          "authorAssociation": "COLLABORATOR",
+          "body": "Thanks, all addressed:\n- **Terminology and readability:** your suggestions are in; b1e6918 fixes the heading anchor and 8ced230 the `cnf` wording.\n- **RFC 9449 alignment:** be351c2 states that this extends RFC 9449, requires `ath`, and drops token-less proofs.\n- **Signalling:** be351c2 adds a self-contained `Bearer error=\"binding_key_required\", algs=\"ES256\"` response, with an example, for retrying with the same token and a DPoP proof; a `DPoP` challenge is sent only when a DPoP-bound token is required.\n- **Trust model:** e93235b states that the authorization server does not verify possession and relies on the signed challenge, keeps client authentication, and makes a scoped exception to `dpop_bound_access_tokens`.\n",
+          "createdAt": "2026-10-30T18:46:22Z",
+          "updatedAt": "2026-10-30T18:46:22Z"
+        }
+      ],
+      "reviews": [
+        {
+          "id": "PRR_kwDOSSp7CM8AAAABVHvGUA",
+          "commit": {
+            "abbreviatedOid": "6b10ca3"
+          },
+          "author": "PieterKas",
+          "authorAssociation": "COLLABORATOR",
+          "state": "COMMENTED",
+          "body": "",
+          "createdAt": "2026-10-30T12:40:18Z",
+          "updatedAt": "2026-10-30T12:40:18Z",
+          "comments": [
+            {
+              "originalPosition": 82,
+              "body": "I think the intent here is that iinstead of doing POP at the AS, the client/agent can send a DPoP proof to the RS, which can confirm POP, and then put the cnf claim for which it wants a bindding into the challenge.\n\nMy other take is that this is an attempt to let the RS ask for a bound token, even if it previously accepted a bearer token (hence allowing a resource server to 'step-up\" to a bound token for a specific trasnaction.\n\nSince we are deviating from standard RFC 9449 in this case, I think we risk overloaidn the existing RFC 9449 signalling. Specificaly, the only signal that a client should attach a DPoP proof to a bearer request is the 401 described in lines 486\u2013491. That response can\u2019t be distinguished from an RFC 9449 Section 7.2 challenge asking for a DPoP-bound token, which is how a standard DPoP client will read it. \n\nIf we are going to deviate from RFC 9449 in this draft, we should consider defineing an explicit signal, (e.g.  a parameter on the error), that tells the client to present a DPoP Proof along with a bearer token to avoid confusion for clients on whether they should present a DPoP constrained tokane or a bearer token.\n\n@bc-pi may have thoughts on this as well.",
+              "createdAt": "2026-10-30T12:40:18Z",
+              "updatedAt": "2026-10-30T12:40:18Z"
+            }
+          ]
+        },
+        {
+          "id": "PRR_kwDOSSp7CM8AAAABVH56lA",
+          "commit": {
+            "abbreviatedOid": "6b10ca3"
+          },
+          "author": "PieterKas",
+          "authorAssociation": "COLLABORATOR",
+          "state": "COMMENTED",
+          "body": "",
+          "createdAt": "2026-10-30T12:55:21Z",
+          "updatedAt": "2026-10-30T12:55:21Z",
+          "comments": [
+            {
+              "originalPosition": 66,
+              "body": "```suggestion\nA protected resource can request that the access token issued for a challenge be\nbound to a key by including in the challenge a `cnf` claim that identifies that\nkey (the binding key). The binding key is a key that the sender of the triggering\nrequest demonstrated possession of when sending that request. The triggering\nrequest is the request to the protected resource that caused the challenge to be\nissued; it can be sent by an agent or by a client. The authorization server binds\nthe issued access token to the binding key ({{authorization-server-processing}}).\nThe `cnf` claim identifies:\n```",
+              "createdAt": "2026-10-30T12:55:21Z",
+              "updatedAt": "2026-10-30T12:55:21Z"
+            }
+          ]
+        },
+        {
+          "id": "PRR_kwDOSSp7CM8AAAABVH6xyQ",
+          "commit": {
+            "abbreviatedOid": "6b10ca3"
+          },
+          "author": "PieterKas",
+          "authorAssociation": "COLLABORATOR",
+          "state": "COMMENTED",
+          "body": "",
+          "createdAt": "2026-10-30T12:56:40Z",
+          "updatedAt": "2026-10-30T12:56:40Z",
+          "comments": [
+            {
+              "originalPosition": 120,
+              "body": "```suggestion\n  a well-formed value, and the authorization server supports it ({{access-token-key-binding}}).\n```",
+              "createdAt": "2026-10-30T12:56:40Z",
+              "updatedAt": "2026-10-30T12:56:40Z"
+            }
+          ]
+        },
+        {
+          "id": "PRR_kwDOSSp7CM8AAAABVH7Dtw",
+          "commit": {
+            "abbreviatedOid": "6b10ca3"
+          },
+          "author": "PieterKas",
+          "authorAssociation": "COLLABORATOR",
+          "state": "COMMENTED",
+          "body": "",
+          "createdAt": "2026-10-30T12:57:04Z",
+          "updatedAt": "2026-10-30T12:57:04Z",
+          "comments": [
+            {
+              "originalPosition": 249,
+              "body": "```suggestion\nresources can require key binding ({{access-token-key-binding}}). Protected resources SHOULD treat these access tokens\n```",
+              "createdAt": "2026-10-30T12:57:04Z",
+              "updatedAt": "2026-10-30T12:57:04Z"
+            }
+          ]
+        },
+        {
+          "id": "PRR_kwDOSSp7CM8AAAABVH7hpA",
+          "commit": {
+            "abbreviatedOid": "6b10ca3"
+          },
+          "author": "PieterKas",
+          "authorAssociation": "COLLABORATOR",
+          "state": "COMMENTED",
+          "body": "",
+          "createdAt": "2026-10-30T12:57:37Z",
+          "updatedAt": "2026-10-30T12:57:38Z",
+          "comments": [
+            {
+              "originalPosition": 6,
+              "body": "```suggestion\nto which the resulting access token is bound ({{access-token-key-binding}}).\n```",
+              "createdAt": "2026-10-30T12:57:37Z",
+              "updatedAt": "2026-10-30T12:57:38Z"
+            }
+          ]
+        },
+        {
+          "id": "PRR_kwDOSSp7CM8AAAABVH7zVQ",
+          "commit": {
+            "abbreviatedOid": "6b10ca3"
+          },
+          "author": "PieterKas",
+          "authorAssociation": "COLLABORATOR",
+          "state": "COMMENTED",
+          "body": "",
+          "createdAt": "2026-10-30T12:58:00Z",
+          "updatedAt": "2026-10-30T12:58:00Z",
+          "comments": [
+            {
+              "originalPosition": 39,
+              "body": "```suggestion\n  access token ({{access-token-key-binding}}). Unlike `cnf` in a sender-constrained access token\n```",
+              "createdAt": "2026-10-30T12:58:00Z",
+              "updatedAt": "2026-10-30T12:58:00Z"
+            }
+          ]
+        },
+        {
+          "id": "PRR_kwDOSSp7CM8AAAABVH8rjg",
+          "commit": {
+            "abbreviatedOid": "6b10ca3"
+          },
+          "author": "PieterKas",
+          "authorAssociation": "COLLABORATOR",
+          "state": "COMMENTED",
+          "body": "",
+          "createdAt": "2026-10-30T12:59:20Z",
+          "updatedAt": "2026-10-30T12:59:20Z",
+          "comments": [
+            {
+              "originalPosition": 84,
+              "body": "```suggestion\nA protected resource SHOULD include a binding key in the challenge whenever the access token in the triggering request is\n```",
+              "createdAt": "2026-10-30T12:59:20Z",
+              "updatedAt": "2026-10-30T12:59:20Z"
+            }
+          ]
+        },
+        {
+          "id": "PRR_kwDOSSp7CM8AAAABVH9Lfg",
+          "commit": {
+            "abbreviatedOid": "6b10ca3"
+          },
+          "author": "PieterKas",
+          "authorAssociation": "COLLABORATOR",
+          "state": "COMMENTED",
+          "body": "",
+          "createdAt": "2026-10-30T12:59:56Z",
+          "updatedAt": "2026-10-30T12:59:56Z",
+          "comments": [
+            {
+              "originalPosition": 86,
+              "body": "```suggestion\nby configuration, that the authorization server supports binding keys in challenges with the confirmation method used. If\n```",
+              "createdAt": "2026-10-30T12:59:56Z",
+              "updatedAt": "2026-10-30T12:59:56Z"
+            }
+          ]
+        },
+        {
+          "id": "PRR_kwDOSSp7CM8AAAABVH9r8A",
+          "commit": {
+            "abbreviatedOid": "6b10ca3"
+          },
+          "author": "PieterKas",
+          "authorAssociation": "COLLABORATOR",
+          "state": "COMMENTED",
+          "body": "",
+          "createdAt": "2026-10-30T13:00:31Z",
+          "updatedAt": "2026-10-30T13:00:31Z",
+          "comments": [
+            {
+              "originalPosition": 91,
+              "body": "```suggestion\nIf an operation requires a binding key and the request proves no key that the protected resource can use,\n```",
+              "createdAt": "2026-10-30T13:00:31Z",
+              "updatedAt": "2026-10-30T13:00:31Z"
+            }
+          ]
+        },
+        {
+          "id": "PRR_kwDOSSp7CM8AAAABVH-J_g",
+          "commit": {
+            "abbreviatedOid": "6b10ca3"
+          },
+          "author": "PieterKas",
+          "authorAssociation": "COLLABORATOR",
+          "state": "COMMENTED",
+          "body": "",
+          "createdAt": "2026-10-30T13:01:12Z",
+          "updatedAt": "2026-10-30T13:01:12Z",
+          "comments": [
+            {
+              "originalPosition": 119,
+              "body": "```suggestion\n* if the challenge contains a cnf claim, its `cnf` claim contains exactly one confirmation method, `jkt` or `x5t#S256`, with\n```",
+              "createdAt": "2026-10-30T13:01:12Z",
+              "updatedAt": "2026-10-30T13:01:12Z"
+            }
+          ]
+        },
+        {
+          "id": "PRR_kwDOSSp7CM8AAAABVH-i9g",
+          "commit": {
+            "abbreviatedOid": "6b10ca3"
+          },
+          "author": "PieterKas",
+          "authorAssociation": "COLLABORATOR",
+          "state": "COMMENTED",
+          "body": "",
+          "createdAt": "2026-10-30T13:01:48Z",
+          "updatedAt": "2026-10-30T13:01:48Z",
+          "comments": [
+            {
+              "originalPosition": 133,
+              "body": "```suggestion\nWhen the challenge contains a cnf claim, the authorization server MUST bind the access token to the key identified by `cnf`\n```",
+              "createdAt": "2026-10-30T13:01:48Z",
+              "updatedAt": "2026-10-30T13:01:48Z"
+            }
+          ]
+        },
+        {
+          "id": "PRR_kwDOSSp7CM8AAAABVH-tZQ",
+          "commit": {
+            "abbreviatedOid": "6b10ca3"
+          },
+          "author": "PieterKas",
+          "authorAssociation": "COLLABORATOR",
+          "state": "COMMENTED",
+          "body": "",
+          "createdAt": "2026-10-30T13:02:03Z",
+          "updatedAt": "2026-10-30T13:02:04Z",
+          "comments": [
+            {
+              "originalPosition": 171,
+              "body": "```suggestion\nauthorization for a specific operation. When the challenge contains a cnf claim, the access token is sender-constrained to\n```",
+              "createdAt": "2026-10-30T13:02:03Z",
+              "updatedAt": "2026-10-30T13:02:04Z"
+            }
+          ]
+        },
+        {
+          "id": "PRR_kwDOSSp7CM8AAAABVH-3ug",
+          "commit": {
+            "abbreviatedOid": "6b10ca3"
+          },
+          "author": "PieterKas",
+          "authorAssociation": "COLLABORATOR",
+          "state": "COMMENTED",
+          "body": "",
+          "createdAt": "2026-10-30T13:02:19Z",
+          "updatedAt": "2026-10-30T13:02:19Z",
+          "comments": [
+            {
+              "originalPosition": 183,
+              "body": "```suggestion\nWhen the challenge contains a cnf claim, only the holder of the key identified by `cnf` can present the access token; an\n```",
+              "createdAt": "2026-10-30T13:02:19Z",
+              "updatedAt": "2026-10-30T13:02:19Z"
+            }
+          ]
+        },
+        {
+          "id": "PRR_kwDOSSp7CM8AAAABVH_fzw",
+          "commit": {
+            "abbreviatedOid": "6b10ca3"
+          },
+          "author": "PieterKas",
+          "authorAssociation": "COLLABORATOR",
+          "state": "COMMENTED",
+          "body": "",
+          "createdAt": "2026-10-30T13:03:17Z",
+          "updatedAt": "2026-10-30T13:03:17Z",
+          "comments": [
+            {
+              "originalPosition": 217,
+              "body": "```suggestion\n* contains a cnf claim, as recorded by the protected resource, is key-bound, the access token is sender-constrained with the\n```",
+              "createdAt": "2026-10-30T13:03:17Z",
+              "updatedAt": "2026-10-30T13:03:17Z"
+            }
+          ]
+        },
+        {
+          "id": "PRR_kwDOSSp7CM8AAAABVIFG-Q",
+          "commit": {
+            "abbreviatedOid": "6b10ca3"
+          },
+          "author": "PieterKas",
+          "authorAssociation": "COLLABORATOR",
+          "state": "COMMENTED",
+          "body": "",
+          "createdAt": "2026-10-30T13:11:29Z",
+          "updatedAt": "2026-10-30T13:11:29Z",
+          "comments": [
+            {
+              "originalPosition": 258,
+              "body": "```suggestion\nA binding key protects the access token issued for a challenge. The `cnf` claim is part of the signed challenge, so a party that relays the challenge cannot remove or replace the binding key. A party that does not hold the binding key, such as an intermediate agent, cannot present the access token. If that party submits the challenge itself, the resulting access token is bound to the same key, so it cannot present that token either. The authorization server accepts a challenge only once, so such a party can at most prevent the transaction from completing.\n```",
+              "createdAt": "2026-10-30T13:11:29Z",
+              "updatedAt": "2026-10-30T13:16:46Z"
+            }
+          ]
+        },
+        {
+          "id": "PRR_kwDOSSp7CM8AAAABVIGAMA",
+          "commit": {
+            "abbreviatedOid": "6b10ca3"
+          },
+          "author": "PieterKas",
+          "authorAssociation": "COLLABORATOR",
+          "state": "COMMENTED",
+          "body": "",
+          "createdAt": "2026-10-30T13:12:49Z",
+          "updatedAt": "2026-10-30T13:12:50Z",
+          "comments": [
+            {
+              "originalPosition": 266,
+              "body": "```suggestion\nThe strength of this protection depends on where the binding key comes from. If it is the key of a sender-constrained access token, a party that captured that token cannot substitute its own key. If it comes from a DPoP proof or a client certificate, it only shows that the sender of the triggering request holds the key. A party that obtained a bearer access token can then obtain a challenge with its own key as the binding key. Any requester context derived from that access token, such as an `act` claim ({{Section 4.1 of OAUTH-TOKEN-EXCHANGE}}), still identifies the original requester to the approving party. For this reason, {{access-token-key-binding}} restricts this source of binding keys when the protected resource relies on requester context.\n```",
+              "createdAt": "2026-10-30T13:12:50Z",
+              "updatedAt": "2026-10-30T13:17:44Z"
+            }
+          ]
+        },
+        {
+          "id": "PRR_kwDOSSp7CM8AAAABVIN0sQ",
+          "commit": {
+            "abbreviatedOid": "6b10ca3"
+          },
+          "author": "PieterKas",
+          "authorAssociation": "COLLABORATOR",
+          "state": "COMMENTED",
+          "body": "",
+          "createdAt": "2026-10-30T13:23:27Z",
+          "updatedAt": "2026-10-30T13:23:27Z",
+          "comments": [
+            {
+              "originalPosition": 76,
+              "body": "```suggestion\nThis document extends the use of DPoP proofs defined in {{DPOP}}. A protected resource that supports binding keys can accept a DPoP proof on a request whose access token is not DPoP-bound, solely to determine the binding key. Such a proof does not authenticate the request or authorize access. The access token is sent as usual, for example with the `Bearer` scheme ({{BEARER}}), and the proof contains an `ath` claim as specified in {{Section 4.2 of DPOP}}.\n```",
+              "createdAt": "2026-10-30T13:23:27Z",
+              "updatedAt": "2026-10-30T13:23:27Z"
+            }
+          ]
+        },
+        {
+          "id": "PRR_kwDOSSp7CM8AAAABVIN54A",
+          "commit": {
+            "abbreviatedOid": "6b10ca3"
+          },
+          "author": "PieterKas",
+          "authorAssociation": "COLLABORATOR",
+          "state": "CHANGES_REQUESTED",
+          "body": "Thanks for this. Binding the access token to a key the protected resource vouches for is a useful addition, and it lets a protected resource step up from a bearer token to a sender-constrained token for a specific transaction. Requesting changes for the following:\n\nTerminology. \u201cKey-bound challenge\u201d suggests the challenge itself is bound to a key or carries a proof. It isn\u2019t: it carries a key that the access token should be bound to. I\u2019ve suggested renaming the section to \u201cAccess Token Key Binding\u201d (#access-token-key-binding) and using \u201cbinding key\u201d or \u201cchallenge that contains a cnf claim\u201d throughout. Note that the heading at line 457 also needs renaming, or the updated cross-references will break.\n\nAlignment with RFC 9449. Sending a DPoP proof with a bearer token, or with no access token at all, goes beyond what RFC 9449 defines. The text should say explicitly that this extends RFC 9449. Please also either define the token-less case fully or remove it.\n\nSignalling. The 401 a client receives when it should add a DPoP proof to a bearer request looks the same as an RFC 9449 request for a DPoP-bound token, so a standard client will go and get a DPoP-bound token instead. Please define an explicit signal, such as an error parameter or protected resource metadata, and add an example.\n\nAuthorization server trust model. The authorization server binds the token to a key whose possession it never verifies; it relies on the protected resource\u2019s signed assertion. Please state this explicitly, and note that it overrides the client\u2019s DPoP policy.\n\nReadability. I\u2019ve suggested shorter rewrites of the Security Considerations paragraphs.",
+          "createdAt": "2026-10-30T13:23:33Z",
+          "updatedAt": "2026-10-30T13:23:33Z",
+          "comments": []
+        },
+        {
+          "id": "PRR_kwDOSSp7CM8AAAABVIOGCw",
+          "commit": {
+            "abbreviatedOid": "6b10ca3"
+          },
+          "author": "mcguinness",
+          "authorAssociation": "COLLABORATOR",
+          "state": "COMMENTED",
+          "body": "",
+          "createdAt": "2026-10-30T13:23:47Z",
+          "updatedAt": "2026-10-30T13:23:47Z",
+          "comments": [
+            {
+              "originalPosition": 82,
+              "body": "Yes, your read is correct and both are intended. I was pushing the existing signaling too far.\r\n\r\nWe should distinguish \u201cretry with the bearer token plus a proof\u201d from \u201cpresent a DPoP-bound token.\u201d A transaction-specific parameter seems reasonable, while preserving the existing meaning of `WWW-Authenticate: DPoP`.\r\n\r\nFor example, we could add `key_proof=\"dpop\"` to the `Bearer` transaction-authorization error:\r\n\r\n```http\r\nHTTP/1.1 401 Unauthorized\r\nWWW-Authenticate: Bearer error=\"transaction_authorization_required\", key_proof=\"dpop\", algs=\"ES256\"\r\n```\r\n\r\nThe requester would retry with the existing bearer token and a fresh DPoP proof, including `ath` for that token. The RS would omit `transaction_challenge` until it validates the proof. We would define `algs` here as the acceptable proof-signing algorithms and retain `Bearer` plus `key_proof=\"dpop\"` on proof and nonce errors.\r\n\r\n@bc-pi Do you see any issues with using the DPoP proof format this way?",
+              "createdAt": "2026-10-30T13:23:47Z",
+              "updatedAt": "2026-10-30T13:23:48Z"
+            }
+          ]
+        }
+      ]
     }
   ]
 }
