@@ -20,25 +20,27 @@ any required approval, and issues an OAuth 2.0 access token whose granted author
 using Rich Authorization Requests, describe the approved operation. The access token is then
 presented to the protected resource as evidence that the challenged operation was authorized. 
     " name="description">
-<meta content="xml2rfc 3.34.0" name="generator">
+<meta content="xml2rfc 3.34.1" name="generator">
 <meta content="Transaction" name="keyword">
 <meta content="Authorization" name="keyword">
 <meta content="Human-in-the-loop" name="keyword">
+<meta content="Human-on-the-loop" name="keyword">
+<meta content="Human-out-of-the-loop" name="keyword">
 <meta content="draft-rosomakho-oauth-txn-challenge-latest" name="ietf.draft">
 <!-- Generator version information:
-  xml2rfc 3.34.0
-    Python 3.14.5
-    ConfigArgParse 1.7.5
+  xml2rfc 3.34.1
+    Python 3.14.8
+    ConfigArgParse 1.8.0
     google-i18n-address 3.1.1
     intervaltree 3.2.1
     Jinja2 3.1.6
     lxml 6.1.1
     natsort 8.4.0
-    platformdirs 4.10.0
+    platformdirs 4.13.4
     pycountry 24.6.1
     PyYAML 6.0.3
     requests 2.33.1
-    wcwidth 0.8.1
+    wcwidth 0.9.2
 -->
 <link href="draft-rosomakho-oauth-txn-challenge.xml" rel="alternate" type="application/rfc+xml">
 <link href="#copyright" rel="license">
@@ -74,7 +76,6 @@ presented to the protected resource as evidence that the challenged operation wa
   src: local('Lora Italic'), local('Lora-Italic'), url('https://martinthomson.github.io/rfc-css/fonts/lora-italic-latin-ext.woff2') format('woff2');
   unicode-range: U+0100-024F, U+0259, U+1E00-1EFF, U+2020, U+20A0-20AB, U+20AD-20CF, U+2113, U+2C60-2C7F, U+A720-A7FF;
 }
-
 @font-face {
   font-family: 'Lora';
   font-style: italic;
@@ -123,7 +124,6 @@ presented to the protected resource as evidence that the challenged operation wa
   src: local('Lora Regular'), local('Lora-Regular'), url('https://martinthomson.github.io/rfc-css/fonts/lora-regular-latin.woff2') format('woff2');
   unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+2000-206F, U+2074, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
 }
-
 @font-face {
   font-family: 'Lora';
   font-style: normal;
@@ -188,7 +188,6 @@ presented to the protected resource as evidence that the challenged operation wa
   font-display: swap;
   src: local('Oxygen Mono'), local('OxygenMono-Regular'), url('https://martinthomson.github.io/rfc-css/fonts/oxygenmono-regular-latin.woff2') format('woff2');
   unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
-}
 }
 
 @font-face {
@@ -1057,11 +1056,11 @@ svg {
 <thead><tr>
 <td class="left">Internet-Draft</td>
 <td class="center">Txn Challenge</td>
-<td class="right">June 2026</td>
+<td class="right">November 2026</td>
 </tr></thead>
 <tfoot><tr>
 <td class="left">Rosomakho, et al.</td>
-<td class="center">Expires 26 December 2026</td>
+<td class="center">Expires 6 May 2027</td>
 <td class="right">[Page]</td>
 </tr></tfoot>
 </table>
@@ -1074,12 +1073,12 @@ svg {
 <dd class="internet-draft">draft-rosomakho-oauth-txn-challenge-latest</dd>
 <dt class="label-published">Published:</dt>
 <dd class="published">
-<time datetime="2026-06-24" class="published">24 June 2026</time>
+<time datetime="2026-11-02" class="published">2 November 2026</time>
     </dd>
 <dt class="label-intended-status">Intended Status:</dt>
 <dd class="intended-status">Standards Track</dd>
 <dt class="label-expires">Expires:</dt>
-<dd class="expires"><time datetime="2026-12-26">26 December 2026</time></dd>
+<dd class="expires"><time datetime="2027-05-06">6 May 2027</time></dd>
 <dt class="label-authors">Authors:</dt>
 <dd class="authors">
 <div class="author">
@@ -1149,7 +1148,7 @@ presented to the protected resource as evidence that the challenged operation wa
         time. It is inappropriate to use Internet-Drafts as reference
         material or to cite them other than as "work in progress."<a href="#section-boilerplate.1-3" class="pilcrow">¶</a></p>
 <p id="section-boilerplate.1-4">
-        This Internet-Draft will expire on 26 December 2026.<a href="#section-boilerplate.1-4" class="pilcrow">¶</a></p>
+        This Internet-Draft will expire on 6 May 2027.<a href="#section-boilerplate.1-4" class="pilcrow">¶</a></p>
 </section>
 </div>
 <div id="copyright">
@@ -1334,6 +1333,7 @@ Step-up authentication enables a protected resource to require stronger or fresh
 of a user. A transaction authorization challenge instead requests authorization for a specific
 transaction. The approving party can be different from the subject associated with the access token
 used for the original request.<a href="#section-1-4" class="pilcrow">¶</a></p>
+<p id="section-1-5">Automated clients, including AI agents, are deployed with different levels of human oversight <span>[<a href="#FSB-AI" class="cite xref">FSB-AI</a>]</span>. With human-in-the-loop (HITL), a person approves an action before it is taken. With human-on-the-loop (HOTL), actions proceed and a person can intervene or stop them. With human-out-of-the-loop (HOOTL), no person is involved when the action is taken, and authorization is decided by policy that a person previously approved. This document supports all three modes by letting the authorization server obtain approval asynchronously from the appropriate party.<a href="#section-1-5" class="pilcrow">¶</a></p>
 <div id="human-approval-for-agent-mediated-actions">
 <section id="section-1.1">
         <h3 id="name-human-approval-for-agent-me">
@@ -1412,6 +1412,23 @@ at a protected resource and relays a transaction authorization challenge to a cl
         <dd style="margin-left: 1.5em" id="section-2-5.6">
           <p id="section-2-5.6.1">A challenge returned by a protected resource to indicate that a specific requested operation requires
 transaction-specific authorization before it can proceed.<a href="#section-2-5.6.1" class="pilcrow">¶</a></p>
+</dd>
+        <dd class="break"></dd>
+<dt id="section-2-5.7">Human-in-the-Loop (HITL):</dt>
+        <dd style="margin-left: 1.5em" id="section-2-5.8">
+          <p id="section-2-5.8.1">A mode of operation in which a person approves an action before it is taken.<a href="#section-2-5.8.1" class="pilcrow">¶</a></p>
+</dd>
+        <dd class="break"></dd>
+<dt id="section-2-5.9">Human-on-the-Loop (HOTL):</dt>
+        <dd style="margin-left: 1.5em" id="section-2-5.10">
+          <p id="section-2-5.10.1">A mode of operation in which actions proceed without prior approval and a person
+monitors them and can intervene or stop them.<a href="#section-2-5.10.1" class="pilcrow">¶</a></p>
+</dd>
+        <dd class="break"></dd>
+<dt id="section-2-5.11">Human-out-of-the-Loop (HOOTL):</dt>
+        <dd style="margin-left: 1.5em" id="section-2-5.12">
+          <p id="section-2-5.12.1">A mode of operation in which no person is involved when an action is taken, and
+authorization is decided by policy that a person previously approved.<a href="#section-2-5.12.1" class="pilcrow">¶</a></p>
 </dd>
       <dd class="break"></dd>
 </dl>
@@ -1908,11 +1925,12 @@ authorization endpoint with that identifier until the authorization server retur
 It only indicates that the authorization server has accepted the transaction authorization challenge for processing.
 The challenged operation is authorized only when the authorization server issues an access token and the protected
 resource accepts that token for the challenged operation.<a href="#section-5-3" class="pilcrow">¶</a></p>
-<p id="section-5-4">The following figure shows the transaction authorization flow:<a href="#section-5-4" class="pilcrow">¶</a></p>
+<p id="section-5-4">The level of human oversight is a deployment choice and does not change the protocol. The client uses the same grant and the same deferred token response flow whether the challenge is approved by a person before the operation proceeds (HITL), approved automatically subject to human monitoring and intervention (HOTL), or approved by policy a person established in advance (HOOTL).<a href="#section-5-4" class="pilcrow">¶</a></p>
+<p id="section-5-5">The following figure shows the transaction authorization flow:<a href="#section-5-5" class="pilcrow">¶</a></p>
 <span id="name-transaction-authorization-fl"></span><div id="fig-transaction-authorization-flow">
 <figure id="figure-5">
-        <div id="section-5-5.1">
-          <div class="alignLeft art-svg artwork" id="section-5-5.1.1">
+        <div id="section-5-6.1">
+          <div class="alignLeft art-svg artwork" id="section-5-6.1.1">
 <svg xmlns="http://www.w3.org/2000/svg" version="1.1" height="560" width="664" viewBox="0 0 664 560" class="diagram" text-anchor="middle" font-family="monospace" font-size="13px" stroke-linecap="round">
               <path d="M 8,32 L 8,64" fill="none" stroke="black"></path>
               <path d="M 40,72 L 40,544" fill="none" stroke="black"></path>
@@ -1981,7 +1999,7 @@ resource accepts that token for the challenged operation.<a href="#section-5-3" 
                 <text x="292" y="516">access</text>
                 <text x="344" y="516">token</text>
               </g>
-            </svg><a href="#section-5-5.1.1" class="pilcrow">¶</a>
+            </svg><a href="#section-5-6.1.1" class="pilcrow">¶</a>
 </div>
 </div>
 <figcaption><a href="#figure-5" class="selfRef">Figure 5</a>:
@@ -2757,6 +2775,10 @@ Metadata parameters, one OAuth Authorization Server Metadata Parameter and two J
 <dt id="DPOP">[DPOP]</dt>
         <dd>
 <span class="refAuthor">Fett, D.</span>, <span class="refAuthor">Campbell, B.</span>, <span class="refAuthor">Bradley, J.</span>, <span class="refAuthor">Lodderstedt, T.</span>, <span class="refAuthor">Jones, M.</span>, and <span class="refAuthor">D. Waite</span>, <span class="refTitle">"OAuth 2.0 Demonstrating Proof of Possession (DPoP)"</span>, <span class="seriesInfo">RFC 9449</span>, <span class="seriesInfo">DOI 10.17487/RFC9449</span>, <time datetime="2023-09" class="refDate">September 2023</time>, <span>&lt;<a href="https://www.rfc-editor.org/rfc/rfc9449">https://www.rfc-editor.org/rfc/rfc9449</a>&gt;</span>. </dd>
+<dd class="break"></dd>
+<dt id="FSB-AI">[FSB-AI]</dt>
+        <dd>
+<span class="refAuthor">Financial Stability Board</span>, <span class="refTitle">"Sound Practices for Responsible Adoption of Artificial Intelligence (AI): Final report"</span>, <time datetime="2026-10-15" class="refDate">15 October 2026</time>, <span>&lt;<a href="https://www.fsb.org/uploads/P151026-1.pdf">https://www.fsb.org/uploads/P151026-1.pdf</a>&gt;</span>. </dd>
 <dd class="break"></dd>
 <dt id="IANA.HTTP.FieldNames">[IANA.HTTP.FieldNames]</dt>
         <dd>
