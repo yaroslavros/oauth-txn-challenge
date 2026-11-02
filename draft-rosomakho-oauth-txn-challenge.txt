@@ -102,9 +102,9 @@ Table of Contents
      4.6.  Client Processing
      4.7.  Authorization Server Processing
    5.  Transaction Authorization Flow
-     5.1.  Transaction Authorization Request
-     5.2.  Transaction Authorization Response
-     5.3.  Pending and Polling
+     5.1.  Transaction Authorization Grant
+     5.2.  Deferred Processing and Polling
+     5.3.  Discovery
      5.4.  Successful Access Token Response
    6.  Access Token
      6.1.  Token Presentation
@@ -115,7 +115,7 @@ Table of Contents
      8.2.  OAuth Extensions Error Registration
      8.3.  OAuth Parameter Registration
      8.4.  OAuth Protected Resource Metadata Registration
-     8.5.  OAuth Authorization Server Metadata Registration
+     8.5.  OAuth URI Registration
      8.6.   JSON Web Token Claims Registration
    9.  References
      9.1.  Normative References
@@ -902,30 +902,20 @@ WWW-Authenticate: DPoP error="transaction_authorization_required",
 
 5.  Transaction Authorization Flow
 
-   The approval required to satisfy a transaction authorization
-   challenge can require interaction with a human user, resource owner,
-   organizational workflow, or policy authority.  Such interaction can
-   take longer than a single HTTP request-response exchange.  Therefore,
-   this document defines an asynchronous polling flow based on the style
-   of the OAuth 2.0 Device Authorization Grant defined in
-   [OAUTH-DEVICE].
+   The client presents the transaction authorization challenge to the
+   token endpoint (Section 3.2 of [OAUTH-FRAMEWORK]) using the
+   transaction authorization grant defined in this document.  When the
+   authorization server cannot issue a token response immediately, for
+   example because satisfying the challenge requires approval from the
+   resource owner, an administrator, or an organizational policy
+   authority, it uses the OAuth Deferred Token Response mechanism
+   [DEFERRED], with the transaction authorization grant as the
+   originating grant.
 
-   Unlike the Device Authorization Grant, this flow does not use a
-   device code, user code, or verification URI.  Instead, the client
-   submits a signed transaction authorization challenge to the
-   authorization server.  If the authorization server accepts the
-   challenge for processing, it returns a transaction authorization
-   identifier.  The client then polls the transaction authorization
-   endpoint with that identifier until the authorization server returns
-   an access token or an error.
-
-   A successful transaction authorization response does not indicate
-   that the challenged operation has been approved.  It only indicates
-   that the authorization server has accepted the transaction
-   authorization challenge for processing.  The challenged operation is
-   authorized only when the authorization server issues an access token
-   and the protected resource accepts that token for the challenged
-   operation.
+   A token response to the grant (returned immediately or, after
+   deferral, on a polling request) authorizes the challenged operation.
+   A deferred response is not a token response: it only indicates that
+   the authorization server has accepted the challenge for processing.
 
    The level of human oversight is a deployment choice and does not
    change the protocol.  The client uses the same grant and the same
@@ -934,243 +924,176 @@ WWW-Authenticate: DPoP error="transaction_authorization_required",
    subject to human monitoring and intervention (HOTL), or approved by
    policy a person established in advance (HOOTL).
 
-   The following figure shows the transaction authorization flow:
+   The following figure shows the transaction authorization flow when
+   the request is deferred:
 
 +--------+                         +----------------------+    +-----------------+
 | Client |                         | Authorization Server |    | Approving Party |
 +--------+                         +----------------------+    +-----------------+
     |                                         |                         |
-    | Transaction Authorization Request       |                         |
-    | transaction_challenge                   |                         |
+    | POST /token  grant: txn-authz-challenge |                         |
+    | transaction_challenge, deferred         |                         |
     |---------------------------------------->|                         |
     |                                         |                         |
-    |      Transaction Authorization Response |                         |
-    |  transaction_authorization_id, interval |                         |
+    | 400 authorization_pending               |                         |
+    | deferral_code, interval                 |                         |
     |<----------------------------------------|                         |
-    |                                         |                         |
     |                                         | Approval Request        |
     |                                         |------------------------>|
     |                                         |                         |
-    | Transaction Authorization Poll          |                         |
-    | transaction_authorization_id            |                         |
+    | POST /token  grant: deferred            |                         |
+    | deferral_code                           |                         |
     |---------------------------------------->|                         |
-    |                                         |                         |
-    |       authorization_pending / slow_down |                         |
+    | 400 authorization_pending               |                         |
     |<----------------------------------------|                         |
-    |                                         |                         |
-    |                                         |         Approval Result |
+    |                                         | Approval Result         |
     |                                         |<------------------------|
     |                                         |                         |
-    | Transaction Authorization Poll          |                         |
-    | transaction_authorization_id            |                         |
+    | POST /token  grant: deferred            |                         |
+    | deferral_code                           |                         |
     |---------------------------------------->|                         |
-    |                                         |                         |
-    |      Transaction Authorization Response |                         |
-    |                            access token |                         |
+    | 200 token response (access token)       |                         |
     |<----------------------------------------|                         |
     |                                         |                         |
 
-               Figure 7: Transaction authorization flow
+   Figure 7: Transaction authorization flow using a deferred token
+                               response
 
-5.1.  Transaction Authorization Request
+5.1.  Transaction Authorization Grant
 
-   This specification defines a new OAuth endpoint: the transaction
-   authorization endpoint.  The authorization server MUST publish the
-   location of the transaction authorization endpoint using the
-   transaction_authorization_endpoint authorization server metadata
-   parameter defined by this document.
+   This document defines the grant type urn:ietf:params:oauth:grant-
+   type:txn-authz-challenge.  The client presents a validated challenge
+   (relayed to it by the agent) by making a token request to the token
+   endpoint with the following parameters in the application/x-www-form-
+   urlencoded request body:
 
-   The client makes a transaction authorization request to the
-   transaction authorization endpoint by sending a POST request with the
-   following parameters using the application/x-www-form-urlencoded
-   format with a character encoding of UTF-8 in the HTTP request entity-
-   body:
-
-   client_id:  REQUIRED if the client is not authenticating with the
-      authorization server as described in Section 3.2.1 of
-      [OAUTH-FRAMEWORK].  The client identifier issued to the client
-      during the registration process.
+   grant_type:  REQUIRED.  MUST be urn:ietf:params:oauth:grant-type:txn-
+      authz-challenge.
 
    transaction_challenge:  REQUIRED.  The transaction authorization
       challenge received from the protected resource.
 
-   For example, the client makes the following HTTPS request:
+   completion_mode:  OPTIONAL.  Including the value deferred, as defined
+      by [DEFERRED], signals that the client accepts a deferred token
+      response.  Because the approval that satisfies a challenge is
+      typically asynchronous, a client SHOULD include deferred.  An
+      authorization server MUST NOT return a deferred response to a
+      client that has not signaled deferred.  If the authorization
+      server cannot approve the operation synchronously for such a
+      client, it MUST return the access_denied error (Section 3.5 of
+      [OAUTH-DEVICE]); the client can then repeat the request with
+      deferred included in completion_mode.
 
-POST /txn-authorization HTTP/1.1
-Host: as.example.com
-Content-Type: application/x-www-form-urlencoded
-
-client_id=s6BhdRkqt3
-&transaction_challenge=eyJhbGciOiJFUzI1NiIsInR5cCI6InR4bi1hdXRoei1jaGFsbGVuZ2Urand0...
-
-             Figure 8: Transaction authorization request
-
-   Requests to the transaction authorization endpoint MUST use the
-   Transport Layer Security (TLS) protocol [TLS] and implement the best
-   practices of [BCP-195].
+   client_id:  REQUIRED if the client is not authenticating with the
+      authorization server as described in Section 3.2.1 of
+      [OAUTH-FRAMEWORK].
 
    The client authentication requirements of Section 3.2.1 of
-   [OAUTH-FRAMEWORK] apply to requests on this endpoint, which means
-   that confidential clients (those that have established client
-   credentials) authenticate in the same manner as when making requests
-   to the token endpoint, and public clients provide the "client_id"
-   parameter to identify themselves.
-
-   The authorization server MUST validate the transaction authorization
-   challenge as described in Section 4.7 before accepting the request
-   for processing.
-
-5.2.  Transaction Authorization Response
-
-   After receiving a transaction authorization request, the
-   authorization server validates the transaction authorization
-   challenge as described in Section 4.7.  The authorization server then
-   either issues an access token, indicates that the transaction
-   authorization request is pending, or returns an error response.  If
-   the challenge fails validation, the error code is invalid_grant
+   [OAUTH-FRAMEWORK] apply, and requests MUST use TLS following the best
+   practices of [BCP-195].  The authorization server MUST validate the
+   challenge as described in Section 4.7 before accepting the request.
+   If the challenge fails validation, the error code is invalid_grant
    (Section 5.2 of [OAUTH-FRAMEWORK]) unless a more specific code
    applies, such as unauthorized_client for a client that is not
    permitted to request transaction authorization for the operation.
 
-   If the authorization server approves the challenged operation without
-   additional interaction, it returns an access token response as
-   described in Section 5.4.
+   For example, a public client, which [DEFERRED] requires to present a
+   DPoP proof ([DPOP]) on this request, sends the following request:
 
-   If additional interaction or policy evaluation is required, the
-   authorization server returns an HTTP 200 response with an
-   application/json body containing the following parameters:
+POST /token HTTP/1.1
+Host: as.example.com
+Content-Type: application/x-www-form-urlencoded
+DPoP: eyJ0eXAiOiJkcG9wK2p3dCIsImFsZyI6IkVTMjU2IiwiandrIjp7Imt0eSI6IkVDIiwiY3J2IjoiUC0yNTYi...
 
-   transaction_authorization_id:  REQUIRED.  A server-generated
-      identifier used by the client to continue or poll the transaction
-      authorization request.
+grant_type=urn%3Aietf%3Aparams%3Aoauth%3Agrant-type%3Atxn-authz-challenge
+&client_id=s6BhdRkqt3
+&completion_mode=deferred
+&transaction_challenge=eyJhbGciOiJFUzI1NiIsInR5cCI6InR4bi1hdXRoei1jaGFsbGVuZ2Urand0In0...
 
-   expires_in:  REQUIRED.  Lifetime in seconds of the pending
-      transaction authorization request maintained by the authorization
-      server.
+          Figure 8: Transaction authorization grant request
 
-   interval:  OPTIONAL.  Minimum amount of time in seconds that the
-      client SHOULD wait between polling requests.  If omitted, the
-      client SHOULD use 5 seconds.
+5.2.  Deferred Processing and Polling
 
-   authorization_uri:  OPTIONAL.  URI that the client can present to the
-      user or open in a user agent to continue the authorization
-      interaction.  This URI is used when the authorization server
-      requires an interactive approval or authentication step.
+   If the authorization server can approve the challenged operation
+   without further interaction, it returns a token response as described
+   in Section 5.4.
 
-   The authorization server MUST bind the transaction_authorization_id
-   to the client that initiated the transaction authorization request.
+   Otherwise, if the client signaled completion_mode=deferred, the
+   authorization server returns a deferred token response as defined in
+   [DEFERRED]: an HTTP 400 response whose body carries the
+   authorization_pending or interaction_required error code, a
+   deferral_code, an expires_in, and an interval.  The client then polls
+   the token endpoint using the deferred grant of [DEFERRED]
+   (grant_type=urn:ietf:params:oauth:grant-type:deferred with the
+   deferral_code) until it receives a token response or a terminal
+   error.  The polling cadence, the interaction_required, slow_down,
+   expired_token, and access_denied errors, optional completion-callback
+   notifications, and cancellation via the revocation endpoint are all
+   as defined in [DEFERRED].
 
-   A successful response containing transaction_authorization_id does
-   not indicate that the challenged operation has been approved.  It
-   only indicates that the authorization server has accepted the
-   transaction authorization request for processing.
+   When approval requires interaction that the client can facilitate,
+   the authorization server returns interaction_required with an
+   interaction_uri, on the deferred response or on a later polling
+   response, as defined in [DEFERRED].  The client presents the
+   interaction_uri to the user or other approving party, or opens it in
+   a user agent, and continues polling.
 
-   For example:
+   The deferral_code is sender-constrained as defined in [DEFERRED];
+   this protects the polling credential.  If the challenge contains a
+   cnf claim, the access token issued on a polling request is bound to
+   the key identified by cnf (Section 4.7), even if [DEFERRED] binds the
+   deferral_code to the client's DPoP key.  Otherwise, if the client
+   presents a DPoP proof on the transaction authorization grant request,
+   as [DEFERRED] requires of a public client, [DEFERRED] binds both the
+   deferral_code and the access token later issued on a polling request
+   to the client's DPoP key; if it does not, the format and binding of
+   the issued access token are as described in Section 5.4.  The txn
+   value correlates the challenge, the issued token, and any re-
+   evaluation.
 
-   HTTP/1.1 200 OK
-   Content-Type: application/json
-   Cache-Control: no-store
+      Editor's note: When the client presents a DPoP proof, binding the
+      access token to the key identified by cnf conflicts with
+      [DEFERRED], which requires the access token to be bound to the
+      client's DPoP key in both its sender-constraint requirements and
+      its sender-constraining continuity guarantee.  Resolving this
+      requires [DEFERRED] to let the originating grant define how the
+      issued access token is bound, separately from the binding of the
+      deferral_code.
 
-   {
-     "transaction_authorization_id": "txn-authz-abc123",
-     "expires_in": 300,
-     "interval": 5
-   }
-
-            Figure 9: Transaction authorization pending response
-
-   The following example includes an authorization_uri for an
-   authorization interaction:
-
-HTTP/1.1 200 OK
-Content-Type: application/json
-Cache-Control: no-store
-
-{
-  "transaction_authorization_id": "txn-authz-abc123",
-  "authorization_uri": "https://as.example.com/txn-authorization/txn-authz-abc123",
-  "expires_in": 300,
-  "interval": 5
-}
-
-      Figure 10: Transaction authorization interaction response
-
-5.3.  Pending and Polling
-
-   If the authorization server returns a transaction_authorization_id,
-   the client continues the transaction authorization request by polling
-   the transaction authorization endpoint.
-
-   The client polls by sending a POST request with the following
-   parameters using the application/x-www-form-urlencoded format with a
-   character encoding of UTF-8 in the HTTP request entity-body:
-
-   client_id:  REQUIRED if the client is not authenticating with the
-      authorization server as described in Section 3.2.1 of
-      [OAUTH-FRAMEWORK].  The client identifier issued to the client
-      during the registration process.
-
-   transaction_authorization_id:  REQUIRED.  The transaction
-      authorization identifier returned by the authorization server.
-
-   For example:
-
-   POST /txn-authorization HTTP/1.1
-   Host: as.example.com
-   Content-Type: application/x-www-form-urlencoded
-
-   client_id=s6BhdRkqt3
-   &transaction_authorization_id=txn-authz-abc123
-
-           Figure 11: Polling a transaction authorization request
-
-   The client MUST wait at least the number of seconds specified by the
-   interval parameter before polling again.  If no interval value was
-   provided, the client MUST wait at least 5 seconds between polling
-   requests.
-
-   The authorization server MUST ensure that the client polling the
-   transaction authorization endpoint is the same client that initiated
-   the transaction authorization request, or is otherwise authorized to
-   obtain the result.
-
-   If the transaction authorization request is still pending, the
-   authorization server returns an error response with the
-   authorization_pending error code, as defined in Section 3.5 of
-   [OAUTH-DEVICE].
-
-   For example:
+   For example, the authorization server returns a deferred response,
+   and the client then polls:
 
    HTTP/1.1 400 Bad Request
    Content-Type: application/json
    Cache-Control: no-store
 
    {
-     "error": "authorization_pending"
+     "error": "authorization_pending",
+     "deferral_code": "LRGidcSAeVs_xYpEDt5pNx0A0TBr7qPHbh_Se6pfdf4",
+     "expires_in": 300,
+     "interval": 5
    }
 
-           Figure 12: Transaction authorization pending response
+                     Figure 9: Deferred token response
 
-   The authorization server MAY return an error response with the
-   slow_down error code, as defined in Section 3.5 of [OAUTH-DEVICE], to
-   instruct the client to increase the polling interval.  After
-   receiving slow_down, the client MUST increase the polling interval by
-   at least 5 seconds.
+POST /token HTTP/1.1
+Host: as.example.com
+Content-Type: application/x-www-form-urlencoded
+DPoP: eyJ0eXAiOiJkcG9wK2p3dCIsImFsZyI6IkVTMjU2IiwiandrIjp7Imt0eSI6IkVDIiwiY3J2IjoiUC0yNTYi...
 
-   On encountering a connection timeout, clients MUST unilaterally
-   reduce their polling frequency before retrying.  The use of an
-   exponential backoff algorithm to achieve this, such as doubling the
-   polling interval on each such connection timeout, is RECOMMENDED.
+grant_type=urn%3Aietf%3Aparams%3Aoauth%3Agrant-type%3Adeferred
+&client_id=s6BhdRkqt3
+&deferral_code=LRGidcSAeVs_xYpEDt5pNx0A0TBr7qPHbh_Se6pfdf4
 
-   If the transaction authorization request is approved, the
-   authorization server returns an access token response as described in
-   Section 5.4.
+   Figure 10: Polling a deferred transaction authorization request
 
-   If the approving party denies the request, the authorization server
-   returns an error response with the access_denied error code.  If the
-   transaction authorization request has expired, the authorization
-   server returns an error response with the expired_token error code,
-   as defined in Section 3.5 of [OAUTH-DEVICE].
+5.3.  Discovery
+
+   An authorization server indicates support for this mechanism by
+   including urn:ietf:params:oauth:grant-type:txn-authz-challenge in the
+   grant_types_supported value of its metadata [OAUTH-AS-METADATA], and
+   by setting the deferred_token_response_supported metadata parameter
+   defined in [DEFERRED] to true.
 
 5.4.  Successful Access Token Response
 
@@ -1235,7 +1158,7 @@ Cache-Control: no-store
      ]
    }
 
-                Figure 13: Successful access token response
+                Figure 11: Successful access token response
 
    The access token MUST have a limited lifetime.  The authorization
    server SHOULD issue the access token with a short lifetime because it
@@ -1308,19 +1231,19 @@ Cache-Control: no-store
 
    For example:
 
-   POST /payments HTTP/1.1
-   Host: resource.example.com
-   Authorization: DPoP eyJhbGciOiJFUzI1NiIsInR5cCI6ImF0K2p3dCJ9...
-   DPoP: eyJ0eXAiOiJkcG9wK2p3dCIsImFsZyI6IkVTMjU2IiwiandrIjp7...
-   Content-Type: application/json
+POST /payments HTTP/1.1
+Host: resource.example.com
+Authorization: DPoP eyJhbGciOiJFUzI1NiIsInR5cCI6ImF0K2p3dCJ9...
+DPoP: eyJ0eXAiOiJkcG9wK2p3dCIsImFsZyI6IkVTMjU2IiwiandrIjp7Imt0eSI6IkVDIiwiY3J2IjoiUC0yNTYi...
+Content-Type: application/json
 
-   {
-     "amount": "5000.00",
-     "currency": "GBP",
-     "recipient": "Example Ltd"
-   }
+{
+  "amount": "5000.00",
+  "currency": "GBP",
+  "recipient": "Example Ltd"
+}
 
-       Figure 14: Presenting the access token to a protected resource
+    Figure 12: Presenting the access token to a protected resource
 
    The agent MUST NOT modify the access token.  If the agent cannot
    present the access token to the protected resource, the challenged
@@ -1499,9 +1422,12 @@ Cache-Control: no-store
 8.  IANA Considerations
 
    This document registers the Accept-Txn-Challenge HTTP field name, two
-   OAuth error codes, two OAuth parameters, two OAuth Protected Resource
-   Metadata parameters, one OAuth Authorization Server Metadata
-   Parameter and two JWT claims.
+   OAuth error codes, one OAuth parameter, one OAuth grant type, two
+   OAuth Protected Resource Metadata parameters, and two JWT claims.  It
+   relies on the deferred token response registrations (the
+   completion_mode and interaction_uri parameters, the deferred grant
+   type, the deferral-code type, and the token endpoint usage of the
+   interaction_required error) defined by [DEFERRED].
 
 8.1.  HTTP Field Name Registration
 
@@ -1549,17 +1475,7 @@ Cache-Control: no-store
 
    Name:  transaction_challenge
 
-   Parameter Usage Location:  rs-client response, transaction
-      authorization request
-
-   Change controller:  IETF
-
-   Reference:  this document
-
-   Name:  transaction_authorization_id
-
-   Parameter Usage Location:  transaction authorization request,
-      transaction authorization response
+   Parameter Usage Location:  WWW-Authenticate response, token request
 
    Change controller:  IETF
 
@@ -1590,15 +1506,15 @@ Cache-Control: no-store
 
    Reference:  this document
 
-8.5.  OAuth Authorization Server Metadata Registration
+8.5.  OAuth URI Registration
 
-   IANA is requested to register the following value in the "OAuth
-   Authorization Server Metadata" registry [IANA.OAuth.Parameters].
+   IANA is requested to register the following value in the "OAuth URI"
+   registry [IANA.OAuth.Parameters], in accordance with [OAUTH-URI].
 
-   Metadata name:  transaction_authorization_endpoint
+   URN:  urn:ietf:params:oauth:grant-type:txn-authz-challenge
 
-   Metadata description:  URL of the authorization server endpoint to
-      which clients submit transaction authorization challenges.
+   Common Name:  Grant type URI for presenting an OAuth transaction
+      authorization challenge to the token endpoint.
 
    Change controller:  IETF
 
@@ -1642,6 +1558,12 @@ Cache-Control: no-store
               DOI 10.17487/RFC6750, October 2012,
               <https://www.rfc-editor.org/rfc/rfc6750>.
 
+   [DEFERRED] de Oliveira Niero, G. and D. Liu, "Deferred Token
+              Response", Work in Progress, Internet-Draft, draft-ietf-
+              oauth-deferred-token-response-01, 31 October 2026,
+              <https://datatracker.ietf.org/doc/html/draft-ietf-oauth-
+              deferred-token-response-01>.
+
    [DPOP]     Fett, D., Campbell, B., Bradley, J., Lodderstedt, T.,
               Jones, M., and D. Waite, "OAuth 2.0 Demonstrating Proof of
               Possession (DPoP)", RFC 9449, DOI 10.17487/RFC9449,
@@ -1661,11 +1583,11 @@ Cache-Control: no-store
               DOI 10.17487/RFC8705, February 2020,
               <https://www.rfc-editor.org/rfc/rfc8705>.
 
-   [OAUTH-DEVICE]
-              Denniss, W., Bradley, J., Jones, M., and H. Tschofenig,
-              "OAuth 2.0 Device Authorization Grant", RFC 8628,
-              DOI 10.17487/RFC8628, August 2019,
-              <https://www.rfc-editor.org/rfc/rfc8628>.
+   [OAUTH-AS-METADATA]
+              Jones, M., Sakimura, N., and J. Bradley, "OAuth 2.0
+              Authorization Server Metadata", RFC 8414,
+              DOI 10.17487/RFC8414, June 2018,
+              <https://www.rfc-editor.org/rfc/rfc8414>.
 
    [OAUTH-FRAMEWORK]
               Hardt, D., Ed., "The OAuth 2.0 Authorization Framework",
@@ -1689,6 +1611,11 @@ Cache-Control: no-store
               and C. Mortimore, "OAuth 2.0 Token Exchange", RFC 8693,
               DOI 10.17487/RFC8693, January 2020,
               <https://www.rfc-editor.org/rfc/rfc8693>.
+
+   [OAUTH-URI]
+              Campbell, B. and H. Tschofenig, "An IETF URN Sub-Namespace
+              for OAuth", RFC 6755, DOI 10.17487/RFC6755, October 2012,
+              <https://www.rfc-editor.org/rfc/rfc6755>.
 
    [POP-KEY]  Jones, M., Bradley, J., and H. Tschofenig, "Proof-of-
               Possession Key Semantics for JSON Web Tokens (JWTs)",
@@ -1737,17 +1664,17 @@ Cache-Control: no-store
               Access Tokens", RFC 9068, DOI 10.17487/RFC9068, October
               2021, <https://www.rfc-editor.org/rfc/rfc9068>.
 
+   [OAUTH-DEVICE]
+              Denniss, W., Bradley, J., Jones, M., and H. Tschofenig,
+              "OAuth 2.0 Device Authorization Grant", RFC 8628,
+              DOI 10.17487/RFC8628, August 2019,
+              <https://www.rfc-editor.org/rfc/rfc8628>.
+
    [OAUTH-STEP-UP]
               Bertocci, V. and B. Campbell, "OAuth 2.0 Step Up
               Authentication Challenge Protocol", RFC 9470,
               DOI 10.17487/RFC9470, September 2023,
               <https://www.rfc-editor.org/rfc/rfc9470>.
-
-   [TLS]      Rescorla, E., "The Transport Layer Security (TLS) Protocol
-              Version 1.3", Work in Progress, Internet-Draft, draft-
-              ietf-tls-rfc8446bis-14, 13 September 2025,
-              <https://datatracker.ietf.org/doc/html/draft-ietf-tls-
-              rfc8446bis-14>.
 
 Acknowledgments
 
