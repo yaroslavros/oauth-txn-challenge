@@ -1,6 +1,6 @@
 {
   "magic": "E!vIA5L86J2I",
-  "timestamp": "2026-11-01T04:14:00.279617+00:00",
+  "timestamp": "2026-11-03T05:14:15.757009+00:00",
   "repo": "yaroslavros/oauth-txn-challenge",
   "labels": [
     {
@@ -318,15 +318,15 @@
       "id": "I_kwDOSSp7CM8AAAABHD3JDA",
       "title": "Transaction Authorization Challenge must support option of DPoP key binding for issued Access Token",
       "url": "https://github.com/yaroslavros/oauth-txn-challenge/issues/18",
-      "state": "OPEN",
+      "state": "CLOSED",
       "author": "identitymonk",
       "authorAssociation": "NONE",
       "assignees": [],
       "labels": [],
       "body": "If the outcome of the flow is an Access Toke, there must be an option to allow the token to be bound to a Resource Server owned key as the Access Token is of type `Bearer`.",
       "createdAt": "2026-06-29T13:59:07Z",
-      "updatedAt": "2026-06-29T13:59:07Z",
-      "closedAt": null,
+      "updatedAt": "2026-11-02T00:16:26Z",
+      "closedAt": "2026-11-02T00:16:26Z",
       "comments": []
     },
     {
@@ -738,25 +738,42 @@
       "id": "PR_kwDOSSp7CM7t5JVe",
       "title": "Use Deferred Token Response as the asynchronous substrate",
       "url": "https://github.com/yaroslavros/oauth-txn-challenge/pull/21",
-      "state": "OPEN",
+      "state": "MERGED",
       "author": "mcguinness",
       "authorAssociation": "COLLABORATOR",
       "assignees": [],
       "labels": [],
       "body": "Implements the proposal in #20.\n\nReplaces the bespoke transaction authorization endpoint and polling protocol with OAuth Deferred Token Response ([`draft-ietf-oauth-deferred-token-response`](https://datatracker.ietf.org/doc/draft-ietf-oauth-deferred-token-response/)):\n- Present the challenge at the token endpoint via `grant_type=urn:ietf:params:oauth:grant-type:txn-authz-challenge` with `completion_mode=deferred`.\n- Defer with `400 authorization_pending` + `deferral_code`; poll via the deferred grant.\n- A client that did not opt in to deferral and cannot be approved synchronously receives `access_denied`; it can retry with `completion_mode=deferred`.\n- Remove the `transaction_authorization_endpoint` and `transaction_authorization_id` registrations; register the new grant type; discovery via `grant_types_supported` + `deferred_token_response_supported`.\n- Replace `authorization_uri` with DTR's `interaction_required` state and `interaction_uri` parameter for approvals that need interaction.\n- The access token response is unchanged.\n\n**Notes**\n- Tracks the DTR editor's copy at `oauth-wg/oauth-deferred-token-response@4001584` (ahead of -01): `interaction_required`/`interaction_uri`, base64url `deferral_code` examples, and the Substrate Invariants. The normative reference resolves to -00 until -01 is posted.\n- **Open issue: access-token binding.** DTR's Sender-Constraint Requirements require a public client to send DPoP on the initial token request, and bind the access token issued on polling to that same client key; Substrate Guarantee 3 repeats this for every originating grant. In this draft the agent, not the client, presents the access token, so a token bound to the client's key is unusable by the agent. The draft states this and carries an Editor's Note; resolving it needs DTR to let the originating grant define access-token binding separately from deferral-code binding. Relates to #23.\n- Based on `main`; builds cleanly with `kramdown-rfc`.\n- **Normative dependency:** DTR is still an Internet-Draft, so the normative reference holds publication of this document until DTR is published; see #20 for the normative-vs-informative discussion.\n",
       "createdAt": "2026-07-04T16:32:22Z",
-      "updatedAt": "2026-10-28T10:40:07Z",
+      "updatedAt": "2026-11-02T13:15:39Z",
       "baseRepository": "yaroslavros/oauth-txn-challenge",
       "baseRefName": "main",
-      "baseRefOid": "6ddf841de1c8d5e5555187bab436383890940bb8",
+      "baseRefOid": "6246295318d51f8e089a8573ba59b0f25a6e682f",
       "headRepository": "mcguinness/oauth-txn-challenge",
       "headRefName": "txn-dtr",
-      "headRefOid": "c893c06b4e03b21a51df174a778d399465fed40b",
-      "closedAt": null,
-      "mergedAt": null,
-      "mergedBy": null,
-      "mergeCommit": null,
-      "comments": [],
+      "headRefOid": "1aaac14b3c3f0fde315307fc393d7ceec44a8635",
+      "closedAt": "2026-11-02T13:15:39Z",
+      "mergedAt": "2026-11-02T13:15:39Z",
+      "mergedBy": "yaroslavros",
+      "mergeCommit": {
+        "oid": "50787f605bdc584d74721badcd581cb676e3e757"
+      },
+      "comments": [
+        {
+          "author": "yaroslavros",
+          "authorAssociation": "OWNER",
+          "body": "@mcguinness could you please rebase this PR/resolve merge conflicts?",
+          "createdAt": "2026-11-02T00:18:38Z",
+          "updatedAt": "2026-11-02T00:18:38Z"
+        },
+        {
+          "author": "mcguinness",
+          "authorAssociation": "COLLABORATOR",
+          "body": "@yaroslavros resolved and green",
+          "createdAt": "2026-11-02T04:17:50Z",
+          "updatedAt": "2026-11-02T04:17:50Z"
+        }
+      ],
       "reviews": [
         {
           "id": "PRR_kwDOSSp7CM8AAAABQjrNUQ",
@@ -1009,25 +1026,40 @@
       "id": "PR_kwDOSSp7CM7t5NSv",
       "title": "Add key binding, assurance profiles, and delegation",
       "url": "https://github.com/yaroslavros/oauth-txn-challenge/pull/23",
-      "state": "OPEN",
+      "state": "CLOSED",
       "author": "mcguinness",
       "authorAssociation": "COLLABORATOR",
       "assignees": [],
       "labels": [],
       "body": "Addresses #18 (and proposed in #22).\n\nStrengthens the sender-constrained access token the draft already recommends into a binding the protected resource can require and verify:\n- Adds an **Agent Key and Proof of Possession** section (DPoP mandatory-to-implement, mutual-TLS optional) and a `cnf` claim in the challenge.\n- Adds **Assurance Profiles**: key-bound (default; `cnf` present -> sender-constrained) and relay (no `cnf` -> current Bearer behavior) \u2014 this is the *option* requested in #18.\n- In the key-bound profile the AS sender-constrains the access token and the PR verifies proof of possession.\n- Adds **delegation across agents** via OAuth 2.0 Token Exchange (a key-bound token can't be relayed to a different agent) and trust-domain propagation.\n\n**Notes**\n- Based on `main`, builds cleanly with `kramdown-rfc`, keeps the agent/Agent-Relay model, and is independent of my other proposals.\n- See #18 for the \"Resource Server owned key\" wording question \u2014 this binds to the requesting agent's key (DPoP/mTLS).",
       "createdAt": "2026-07-04T16:39:07Z",
-      "updatedAt": "2026-10-30T11:00:08Z",
+      "updatedAt": "2026-11-02T02:37:39Z",
       "baseRepository": "yaroslavros/oauth-txn-challenge",
       "baseRefName": "main",
       "baseRefOid": "6ddf841de1c8d5e5555187bab436383890940bb8",
       "headRepository": "mcguinness/oauth-txn-challenge",
       "headRefName": "txn-key-binding",
       "headRefOid": "1d0abedf9a1835818de45135676c7df32dcdd6d4",
-      "closedAt": null,
+      "closedAt": "2026-11-02T02:37:39Z",
       "mergedAt": null,
       "mergedBy": null,
       "mergeCommit": null,
-      "comments": [],
+      "comments": [
+        {
+          "author": "yaroslavros",
+          "authorAssociation": "OWNER",
+          "body": "@mcguinness should this PR be closed if it is superseded by https://github.com/yaroslavros/oauth-txn-challenge/pull/29 ?",
+          "createdAt": "2026-11-02T00:17:18Z",
+          "updatedAt": "2026-11-02T00:17:18Z"
+        },
+        {
+          "author": "mcguinness",
+          "authorAssociation": "COLLABORATOR",
+          "body": "Superseded by #29, now merged. A `cnf` claim in the challenge replaces the Agent Key and assurance profiles, and binding delegates to RFC 9449 and RFC 8705. Re-binding to another agent's key is tracked in #30. Trust-domain propagation and mandatory-to-implement DPoP were dropped.",
+          "createdAt": "2026-11-02T02:37:38Z",
+          "updatedAt": "2026-11-02T02:37:38Z"
+        }
+      ],
       "reviews": [
         {
           "id": "PRR_kwDOSSp7CM8AAAABQjchhQ",
@@ -1190,50 +1222,68 @@
       "id": "PR_kwDOSSp7CM8AAAABLTXLIA",
       "title": "Enhance OAuth document with new human oversight modes",
       "url": "https://github.com/yaroslavros/oauth-txn-challenge/pull/28",
-      "state": "OPEN",
+      "state": "MERGED",
       "author": "PieterKas",
       "authorAssociation": "COLLABORATOR",
       "assignees": [],
       "labels": [],
       "body": "Added definitions for Human-on-the-loop (HOTL) and Human-out-of-the-loop (HOOTL) modes of operation, and included a reference to the FSB-AI report.",
       "createdAt": "2026-10-28T15:51:53Z",
-      "updatedAt": "2026-10-28T15:52:20Z",
+      "updatedAt": "2026-11-02T00:14:47Z",
       "baseRepository": "yaroslavros/oauth-txn-challenge",
       "baseRefName": "main",
       "baseRefOid": "6ddf841de1c8d5e5555187bab436383890940bb8",
       "headRepository": "yaroslavros/oauth-txn-challenge",
       "headRefName": "PieterKas-patch-2",
       "headRefOid": "f41659f3d1f2675383aed180eb5f19baff8d0791",
-      "closedAt": null,
-      "mergedAt": null,
-      "mergedBy": null,
-      "mergeCommit": null,
+      "closedAt": "2026-11-02T00:14:46Z",
+      "mergedAt": "2026-11-02T00:14:46Z",
+      "mergedBy": "yaroslavros",
+      "mergeCommit": {
+        "oid": "c032317989dfdd2eaa9c4ed2fa4a75efa0f76977"
+      },
       "comments": [],
-      "reviews": []
+      "reviews": [
+        {
+          "id": "PRR_kwDOSSp7CM8AAAABVZdHrQ",
+          "commit": {
+            "abbreviatedOid": "f41659f"
+          },
+          "author": "yaroslavros",
+          "authorAssociation": "OWNER",
+          "state": "APPROVED",
+          "body": "",
+          "createdAt": "2026-11-02T00:14:40Z",
+          "updatedAt": "2026-11-02T00:14:40Z",
+          "comments": []
+        }
+      ]
     },
     {
       "number": 29,
       "id": "PR_kwDOSSp7CM8AAAABLoEbcw",
       "title": "Add access token key binding",
       "url": "https://github.com/yaroslavros/oauth-txn-challenge/pull/29",
-      "state": "OPEN",
+      "state": "MERGED",
       "author": "mcguinness",
       "authorAssociation": "COLLABORATOR",
       "assignees": [],
       "labels": [],
       "body": "Resolves #18. Supersedes #23.\n\n### What\nLets a challenge carry a `cnf` claim identifying a binding key: a key proved on the triggering request. The authorization server binds the issued access token to that key using DPoP (RFC 9449) or mutual-TLS (RFC 8705).\n\nBecause the key is signed into the challenge, relays cannot change it, and a stolen challenge yields a token the thief cannot present. The client that submits the challenge need not hold the key, so this works for agents and for clients that call the protected resource directly.\n\n### Why\nToday the issued access token defaults to a bearer token, and it passes through the client and any intermediate agents. DPoP and mutual-TLS alone bind it to a key that the client proves, but the client is often not the party that presents the token. The protected resource already sees the presenter's key, so it carries that key in the challenge. Everything else is delegated to RFC 9449 and RFC 8705.\n\n### Changes\n- **Access Token Key Binding** (new section):\n  - **Using an Existing Token Binding:** `cnf` is the key of the sender-constrained access token in the triggering request. No new client behavior.\n  - **Establishing a Binding Key:** with a bearer token, `cnf` is the key of a DPoP proof sent with it, an explicit extension of RFC 9449, or of the mutual-TLS client certificate. Written as processing steps for the protected resource, including errors and the requester-context restriction.\n- **`binding_key_required` error**, with `algs` as a `Bearer` parameter: asks for the request to be repeated with the same access token and a DPoP proof. Sent only to requests with `Accept-Txn-Challenge: ?1`. Registered in the OAuth Extensions Error registry.\n- **Authorization server:** binds the token to the `cnf` key per RFC 9449 or RFC 8705, and to no other key. It does not verify possession; it relies on the protected resource's signed challenge. Client authentication still applies, with a scoped exception to `dpop_bound_access_tokens`. It accepts each challenge once and issues no refresh token.\n- **Protected resource:** checks that the token is bound to the challenge's `cnf`.\n- **Token response:** client-bound tokens go from RECOMMENDED to MAY, because an agent that is not the client cannot present them. The client relays the token and its `token_type` without holding the key.\n- Security considerations, DPoP examples, and Bearer, DPoP and mutual-TLS as normative references.\n\n### Review updates\nbe351c2 and e93235b address PieterKas's review: \"binding key\" terminology, the RFC 9449 extension made explicit with token-less proofs dropped, an explicit `binding_key_required` signal, and the authorization server trust model.\n\n### Why this replaces #23\n- **No new concepts.** #23's \"Agent Key\" and assurance profiles become the presence of `cnf`, which also works for ordinary clients.\n- **Delegates.** RFC 9449 and RFC 8705 do the work. At issuance this PR adds only three rules: the key comes from the challenge, the client need not prove it, and no other key is used.\n- **Removes a contradiction.** #23 re-bound tokens to a downstream agent's key through token exchange, but its own validation rejected them. Re-binding is dropped, and the delegation scenario is deferred to #30.\n- **Specifies what #23 left open:**\n  - DPoP proofs sent with bearer tokens, and how to request one;\n  - the challenge's authentication scheme;\n  - errors;\n  - refresh tokens.\n- **Drops:**\n  - #23's mandatory-to-implement DPoP. The protected resource must instead know which methods the authorization server supports.\n  - #23's trust-domain propagation section, which is unrelated to key binding.\n\n### Left open\n- **Execution with a different key**, such as by another agent instance or a sub-agent. That party obtains its own challenge for now. Deferred to #30.\n- **Discovery of authorization server support** for binding keys. Configuration for now.\n- **mTLS-only protected resources** have no specific signal for requesting a certificate-bound token.\n\n### Also included, not specific to key binding\nThese close gaps in the base draft. I can split them out if you prefer.\n- A challenge that fails validation gets `invalid_grant`, or a more specific RFC 6749 \u00a75.2 code such as `unauthorized_client`.\n- Single use is enforced per `txn` value, so two access tokens for one transaction cannot each be accepted.\n\n### Validation\nBuilds cleanly with kramdown-rfc and xml2rfc. RFC section references are checked against the RFC text.\n",
       "createdAt": "2026-10-29T20:38:02Z",
-      "updatedAt": "2026-10-30T18:46:22Z",
+      "updatedAt": "2026-11-02T00:16:25Z",
       "baseRepository": "yaroslavros/oauth-txn-challenge",
       "baseRefName": "main",
       "baseRefOid": "6ddf841de1c8d5e5555187bab436383890940bb8",
       "headRepository": "mcguinness/oauth-txn-challenge",
       "headRefName": "key-bound-challenges",
       "headRefOid": "e93235bf38b13280de0704bc517c3826085e1fb1",
-      "closedAt": null,
-      "mergedAt": null,
-      "mergedBy": null,
-      "mergeCommit": null,
+      "closedAt": "2026-11-02T00:16:25Z",
+      "mergedAt": "2026-11-02T00:16:25Z",
+      "mergedBy": "yaroslavros",
+      "mergeCommit": {
+        "oid": "6246295318d51f8e089a8573ba59b0f25a6e682f"
+      },
       "comments": [
         {
           "author": "mcguinness",
@@ -1623,6 +1673,19 @@
               "updatedAt": "2026-10-30T13:23:48Z"
             }
           ]
+        },
+        {
+          "id": "PRR_kwDOSSp7CM8AAAABVZdd8Q",
+          "commit": {
+            "abbreviatedOid": "e93235b"
+          },
+          "author": "yaroslavros",
+          "authorAssociation": "OWNER",
+          "state": "APPROVED",
+          "body": "",
+          "createdAt": "2026-11-02T00:16:14Z",
+          "updatedAt": "2026-11-02T00:16:14Z",
+          "comments": []
         }
       ]
     }
